@@ -1,0 +1,31 @@
+{
+  "rules_version": "2",
+  "rules": {
+    "rules": [
+      {
+        "description": "Default deny all"
+      },
+      {
+        "description": "Users can read/write their own document"
+      },
+      {
+        "description": "Admin can read all users"
+      },
+      {
+        "description": "Users can read their own wallet"
+      },
+      {
+        "description": "Users can read vouchers where they are sender or recipient"
+      },
+      {
+        "description": "Users can read their own redemptions"
+      },
+      {
+        "description": "Users can read their notifications"
+      },
+      {
+        "description": "Admin can read everything"
+      }
+    ]
+  }
+}

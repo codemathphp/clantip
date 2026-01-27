@@ -1,0 +1,10 @@
+.env.local
+node_modules/
+.next/
+out/
+build/
+.DS_Store
+*.pem
+.vercel
+.firebase/
+dist/
