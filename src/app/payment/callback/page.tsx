@@ -7,6 +7,10 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { doc, setDoc, Timestamp } from 'firebase/firestore'
 import toast from 'react-hot-toast'
 
+// Disable static generation for this dynamic page
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function PaymentCallbackPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
