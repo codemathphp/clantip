@@ -2,7 +2,7 @@
   "name": "ClanTip - Digital Value Gifting",
   "short_name": "ClanTip",
   "description": "Send support vouchers and gifts to loved ones across Africa. Redeem whenever you need it.",
-  "start_url": "/",
+  "start_url": "/auth",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

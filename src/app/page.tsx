@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { auth } from '@/firebase/config'
+import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
+import { collection, getDocs } from 'firebase/firestore'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Image from 'next/image'
@@ -25,6 +26,23 @@ export default function Home() {
     return () => unsubscribe()
   }, [router])
 
+  const [heroBg, setHeroBg] = useState<string>('')
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'settings'))
+        if (!snap.empty) {
+          const s = snap.docs[0].data() as any
+          if (s.heroBackgroundUrl) setHeroBg(s.heroBackgroundUrl)
+        }
+      } catch (err) {
+        console.error('Failed loading settings:', err)
+      }
+    }
+    loadSettings()
+  }, [])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center">
@@ -40,9 +58,9 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
       <header className="border-b border-slate-200/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
           <div className="flex items-center">
-            <div className="relative w-40 h-40">
+            <div className="relative w-24 h-24">
               <Image
                 src="/clantip_logo.png"
                 alt="ClanTip Logo"
@@ -55,6 +73,12 @@ export default function Home() {
             <Button onClick={() => router.push('/store')} variant="outline">
               Shop
             </Button>
+            <Button onClick={() => router.push('/about')} variant="ghost">
+              About
+            </Button>
+            <Button onClick={() => router.push('/how-it-works')} variant="ghost">
+              How it works
+            </Button>
             <Button onClick={() => router.push('/auth')} variant="default">
               Sign In
             </Button>
@@ -63,7 +87,19 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <main
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative"
+        style={
+          heroBg
+            ? {
+                backgroundImage: `url(${heroBg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : undefined
+        }
+      >
+        {heroBg && <div className="absolute inset-0 bg-black/30 pointer-events-none rounded-2xl" />}
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
             <div>
