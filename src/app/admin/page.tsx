@@ -854,6 +854,7 @@ export default function AdminDashboard() {
                       <img src={(settings as any).heroBackgroundUrl} alt="hero preview" className="w-full h-40 object-cover" />
                     </div>
                   )}
+                </div>
 
                 <Button onClick={handleSaveSettings} size="lg" className="bg-primary hover:bg-primary/90 w-full md:w-auto">
                   ✓ Save Settings
