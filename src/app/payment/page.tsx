@@ -122,7 +122,7 @@ export default function PaymentPage() {
     })
 
     return () => unsubscribe()
-  }, [router])
+  }, [router, exchangeRate])
 
   const initiatePayment = async (data: CheckoutData, email: string, userId: string) => {
     try {

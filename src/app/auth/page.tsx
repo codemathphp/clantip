@@ -226,7 +226,7 @@ export default function AuthPage() {
             <CardHeader>
               <CardTitle>Enter Your Phone Number</CardTitle>
               <CardDescription>
-                We'll send you a one-time code to verify your number
+                We&apos;ll send you a one-time code to verify your number
               </CardDescription>
             </CardHeader>
             <CardContent>

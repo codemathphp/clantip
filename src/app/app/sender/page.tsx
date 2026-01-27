@@ -524,7 +524,7 @@ export default function SenderDashboard() {
 
             <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-4 text-center border border-slate-200/50">
               <p className="text-sm text-muted-foreground">
-                Can't find what you need? Create a custom gift amount instead.
+                Can&apos;t find what you need? Create a custom gift amount instead.
               </p>
               <Button
                 variant="outline"

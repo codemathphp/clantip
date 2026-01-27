@@ -100,7 +100,7 @@ export default function HelpPage() {
             <CardContent className="space-y-2 text-muted-foreground">
               <p>
                 If a redemption fails due to a bank issue or other problem, your credits will be
-                automatically returned to your wallet. You'll receive a notification explaining
+                automatically returned to your wallet. You&apos;ll receive a notification explaining
                 the reason and can try again.
               </p>
             </CardContent>
@@ -124,7 +124,7 @@ export default function HelpPage() {
             </CardHeader>
             <CardContent className="space-y-2 text-muted-foreground">
               <p>
-                Pricing information is displayed before any transaction. We're transparent about
+                Pricing information is displayed before any transaction. We&apos;re transparent about
                 all fees upfront. Contact our support team for detailed pricing.
               </p>
             </CardContent>
