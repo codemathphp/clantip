@@ -34,6 +34,7 @@ const DEFAULT_FEES = {
   fixedFee: 0.20,
   minPayout: 100,
   maxVoucherAmount: 1000,
+  heroBackgroundUrl: '',
 }
 
 const MENU_ITEMS = [
@@ -832,6 +833,28 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+                {/* Hero Background Image URL */}
+                <div className="space-y-3 p-4 rounded-lg bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
+                      <Image src="/clantip_logo.png" alt="hero" width={20} height={20} />
+                    </div>
+                    <Label className="font-semibold">Hero Background Image URL</Label>
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder="https://example.com/hero.jpg"
+                    value={(settings as any).heroBackgroundUrl || ''}
+                    onChange={(e) => setSettings({ ...(settings as any), heroBackgroundUrl: e.target.value })}
+                    className="border-emerald-200 dark:border-emerald-800"
+                  />
+                  <p className="text-xs text-muted-foreground">Enter a publicly accessible image URL for the homepage hero background</p>
+                  {(settings as any).heroBackgroundUrl && (
+                    <div className="mt-3 rounded-lg overflow-hidden border border-border">
+                      <img src={(settings as any).heroBackgroundUrl} alt="hero preview" className="w-full h-40 object-cover" />
+                    </div>
+                  )}
+
                 <Button onClick={handleSaveSettings} size="lg" className="bg-primary hover:bg-primary/90 w-full md:w-auto">
                   ✓ Save Settings
                 </Button>
@@ -845,11 +868,26 @@ export default function AdminDashboard() {
           <div className="space-y-8 animate-fadeIn">
             <Card className="border-0 shadow-md">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell size={24} className="text-primary" />
-                  Broadcast Notification
-                </CardTitle>
-                <CardDescription>Send app-wide messages to all {users.length} active users</CardDescription>
+                <div className="flex items-center justify-between w-full">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Bell size={24} className="text-primary" />
+                      Broadcast Notification
+                    </CardTitle>
+                    <CardDescription>Send app-wide messages to all {users.length} active users</CardDescription>
+                  </div>
+                  <div>
+                    <Button
+                      onClick={handleSendNotification}
+                      size="sm"
+                      className="bg-primary text-white hover:bg-primary/90"
+                      disabled={!notificationTitle || !notificationMessage}
+                    >
+                      <Bell size={16} className="mr-2" />
+                      Send
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
