@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -64,39 +64,8 @@ export default function AdminDashboard() {
   const [notificationMessage, setNotificationMessage] = useState('')
   const [notificationTitle, setNotificationTitle] = useState('')
 
-  // Check if user is admin
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (authUser: any) => {
-      if (!authUser) {
-        router.push('/auth')
-        return
-      }
-
-      try {
-        const userDoc = await getDocs(
-          query(collection(db, 'users'), where('id', '==', authUser.uid))
-        )
-
-        if (userDoc.empty || userDoc.docs[0].data().role !== 'admin') {
-          router.push('/')
-          toast.error('Admin access only')
-          return
-        }
-
-        setUser(authUser)
-        await loadDashboardData()
-      } catch (error) {
-        console.error('Auth check error:', error)
-        router.push('/')
-      } finally {
-        setLoading(false)
-      }
-    })
-
-    return () => unsubscribe()
-  }, [router])
-
-  const loadDashboardData = async () => {
+  // Define loadDashboardData before useEffect to avoid dependency array issues
+  const loadDashboardData = useCallback(async () => {
     try {
       // Load stats
       const usersSnap = await getDocs(collection(db, 'users'))
@@ -132,7 +101,39 @@ export default function AdminDashboard() {
       console.error('Error loading dashboard data:', error)
       toast.error('Failed to load dashboard data')
     }
-  }
+  }, [])
+
+  // Check if user is admin
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (authUser: any) => {
+      if (!authUser) {
+        router.push('/auth')
+        return
+      }
+
+      try {
+        const userDoc = await getDocs(
+          query(collection(db, 'users'), where('id', '==', authUser.uid))
+        )
+
+        if (userDoc.empty || userDoc.docs[0].data().role !== 'admin') {
+          router.push('/')
+          toast.error('Admin access only')
+          return
+        }
+
+        setUser(authUser)
+        await loadDashboardData()
+      } catch (error) {
+        console.error('Auth check error:', error)
+        router.push('/')
+      } finally {
+        setLoading(false)
+      }
+    })
+
+    return () => unsubscribe()
+  }, [router, loadDashboardData])
 
   const loadStoreItems = async () => {
     // Default items - can be moved to Firestore

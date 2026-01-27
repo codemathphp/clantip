@@ -445,14 +445,14 @@ export default function RecipientDashboard() {
                     {selectedVoucher.message && (
                       <div className="py-3 border-b border-slate-100">
                         <p className="text-muted-foreground mb-2">Message</p>
-                        <p className="italic text-foreground">"{selectedVoucher.message}"</p>
+                        <p className="italic text-foreground">&quot;{selectedVoucher.message}&quot;</p>
                       </div>
                     )}
 
                     <div className="pt-4">
                       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                         <p className="text-sm text-blue-900">
-                          <span className="font-semibold">💡 Tip:</span> Save your voucher code in a safe place. You'll need it when redeeming your credits.
+                          <span className="font-semibold">💡 Tip:</span> Save your voucher code in a safe place. You&apos;ll need it when redeeming your credits.
                         </p>
                       </div>
                     </div>
@@ -491,7 +491,7 @@ export default function RecipientDashboard() {
                             </div>
                             <p className="text-sm text-muted-foreground font-mono mb-1">Code: {voucher.code}</p>
                             {voucher.message && (
-                              <p className="text-sm text-muted-foreground italic line-clamp-1">"{voucher.message}"</p>
+                              <p className="text-sm text-muted-foreground italic line-clamp-1">&quot;{voucher.message}&quot;</p>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">{formatDate(voucher.createdAt)}</p>
                           </div>
