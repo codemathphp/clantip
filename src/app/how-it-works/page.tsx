@@ -95,7 +95,7 @@ export default function HowItWorksPage(){
             </div>
             <div className="p-6 rounded-lg border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all">
               <h3 className="font-semibold text-slate-900 mb-3 text-lg">💰 Transparent Pricing</h3>
-              <p className="text-slate-600">No hidden fees. You see exactly what you're paying upfront. What you send is what they get.</p>
+              <p className="text-slate-600">No hidden fees. You see exactly what you&apos;re paying upfront. What you send is what they get.</p>
             </div>
           </div>
         </section>
@@ -141,7 +141,7 @@ export default function HowItWorksPage(){
         {/* CTA Section */}
         <section className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-8 border border-blue-200">
           <h2 className="text-2xl font-bold text-slate-900 mb-4">Ready to Get Started?</h2>
-          <p className="text-slate-600 mb-6">It\'s that simple. In just a few minutes, you can send support to anyone in your family, anywhere across Africa.</p>
+          <p className="text-slate-600 mb-6">It&apos;s that simple. In just a few minutes, you can send support to anyone in your family, anywhere across Africa.</p>
           <Link href="/" className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
             Send Support Now
           </Link>
