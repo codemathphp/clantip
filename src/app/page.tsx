@@ -120,7 +120,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">Easy Payments</h3>
-                  <p className="text-sm text-muted-foreground">Secure payment via Paystack</p>
+                  <p className="text-sm text-muted-foreground">Multiple secure payment options available</p>
                 </div>
               </div>
 
