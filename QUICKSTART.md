@@ -114,28 +114,10 @@ Key files to explore:
 3. Click "Firestore Database"
 4. Collections are created automatically on first use
 
-### Test Webhook Locally
-```bash
-# Terminal 1: Start dev server
-npm run dev
-
-# Terminal 2: Expose local server
-npx ngrok http 3000
-
-# Terminal 3: Test webhook
-curl -X POST http://your_ngrok_url/api/webhooks/paystack \
-  -H "x-paystack-signature: test_sig" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "event": "charge.success",
-    "data": {
-      "reference": "test-ref",
-      "amount": 10000,
-      "customer": {"email": "test@test.com"},
-      "metadata": {"senderId": "test"}
-    }
-  }'
-```
+### Test Webhook in Production
+- Paystack webhooks are sent to your Vercel deployment URL
+- Webhook URL format: `https://your-vercel-domain.com/api/webhooks/paystack`
+- Ensure webhook URL is configured in Paystack Dashboard → Settings → Webhooks
 
 ### Debug Firestore Rules
 ```bash

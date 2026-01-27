@@ -28,30 +28,22 @@ If you're experiencing issues with Firebase phone authentication on South Africa
 | Country code + number | `+27123456789` | ✅ (E.164 format) |
 | With country code no +| `27123456789` | ⚠️ (may need conversion) |
 
-### 4. App Configuration for ngrok Testing
+### 4. App Configuration for Production Deployment
 
-When testing with ngrok domains:
+The app is now configured for Vercel deployment:
 
-1. **Add ngrok domain to Firebase Authentication allowed domains**:
+1. **Firebase Authorization**:
+   - Ensure your Vercel domain is in Firebase Authentication allowed domains
    - Firebase Console → Authentication → Settings
-   - Under **Authorized domains**, add your ngrok domain (e.g., `xxxxx-ngrok.io`)
-   - OR ensure your `.env.local` has correct Firebase keys
+   - Under **Authorized domains**, Vercel domain should be automatically recognized
 
 2. **Recaptcha Configuration**:
-   - Firebase uses reCAPTCHA internally for phone auth
-   - On ngrok, you may see browser warnings - add this meta tag to bypass:
-     ```html
-     <meta name="ngrok-skip-browser-warning" content="true" />
-     ```
-   - Already added to layout.tsx ✅
+   - Firebase uses reCAPTCHA v3 internally for phone auth
+   - Vercel deployments automatically support this
 
-3. **CORS & Headers** (already configured in next.config.js):
-   ```javascript
-   {
-     key: 'ngrok-skip-browser-warning',
-     value: '69420',
-   }
-   ```
+3. **CORS & Headers** (configured in next.config.js):
+   - Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy headers set
+   - Service-Worker-Allowed header configured for PWA
 
 ### 5. Debug Phone Authentication Issues
 
@@ -120,10 +112,10 @@ NEXT_PUBLIC_FIREBASE_APP_ID=<your_app_id>
 ### 9. Network Requirements
 
 - Firebase phone auth requires internet connection
-- On ngrok, ensure:
-  - ngrok tunnel is running: `ngrok http 3001`
-  - Device can reach ngrok URL (test in browser)
+- Ensure:
+  - Vercel deployment is accessible from your location
   - No VPN/proxy blocking Firebase domains
+  - Device has stable internet connection
 
 ### 10. Still Having Issues?
 
@@ -161,7 +153,7 @@ Location: `src/lib/constants.ts`
 
 - [ ] Firebase phone auth is enabled in console
 - [ ] Test phone numbers are added to Firebase
-- [ ] ngrok domain is added to authorized domains (or Firebase keys are correct)
+- [ ] Vercel domain is in Firebase authorized domains
 - [ ] reCAPTCHA is configured
 - [ ] Phone number is formatted correctly (try: 0123456789 or +27123456789)
 - [ ] Browser console shows no errors

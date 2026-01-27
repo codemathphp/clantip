@@ -1,6 +1,6 @@
 /**
  * Get the base URL for the application
- * Handles both localhost and ngrok URLs
+ * Dynamically handles deployment environment
  */
 export function getBaseUrl(): string {
   // If in browser, use window.location

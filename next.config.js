@@ -27,12 +27,7 @@ const nextConfig = {
             key: 'Cross-Origin-Embedder-Policy',
             value: 'require-corp',
           },
-          // ngrok-specific: Skip browser warning interstitial
-          {
-            key: 'ngrok-skip-browser-warning',
-            value: '69420',
-          },
-          // Allow service worker from ngrok
+          // Allow service worker
           {
             key: 'Service-Worker-Allowed',
             value: '/',
