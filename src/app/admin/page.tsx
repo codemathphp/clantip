@@ -851,7 +851,7 @@ export default function AdminDashboard() {
                   <p className="text-xs text-muted-foreground">Enter a publicly accessible image URL for the homepage hero background</p>
                   {(settings as any).heroBackgroundUrl && (
                     <div className="mt-3 rounded-lg overflow-hidden border border-border">
-                      <img src={(settings as any).heroBackgroundUrl} alt="hero preview" className="w-full h-40 object-cover" />
+                      <Image src={(settings as any).heroBackgroundUrl} alt="hero preview" width={600} height={160} className="w-full h-40 object-cover" />
                     </div>
                   )}
                 </div>
@@ -881,7 +881,7 @@ export default function AdminDashboard() {
                     <Button
                       onClick={handleSendNotification}
                       size="sm"
-                      className="bg-primary text-white hover:bg-primary/90"
+                      className="bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
                       disabled={!notificationTitle || !notificationMessage}
                     >
                       <Bell size={16} className="mr-2" />

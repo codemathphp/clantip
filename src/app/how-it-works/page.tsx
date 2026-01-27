@@ -109,15 +109,15 @@ export default function HowItWorksPage(){
                 What happens after I send the voucher?
                 <span className="group-open:rotate-180 transition-transform">▼</span>
               </summary>
-              <p className="mt-4 text-slate-600">Your recipient receives an SMS and push notification with the voucher details. They can then redeem it directly to their bank account whenever they\'re ready.</p>
+              <p className="mt-4 text-slate-600">Your recipient receives an SMS and push notification with the voucher details. They can then redeem it directly to their bank account whenever they&apos;re ready.</p>
             </details>
             
             <details className="group border border-slate-200 rounded-lg p-6 hover:border-blue-300 cursor-pointer">
               <summary className="flex justify-between items-center font-semibold text-slate-900">
-                How long does it take for funds to reach the recipient's bank?
+                How long does it take for funds to reach the recipient&apos;s bank?
                 <span className="group-open:rotate-180 transition-transform">▼</span>
               </summary>
-              <p className="mt-4 text-slate-600">Most transfers complete within 24 hours. In some cases, it may take up to 48 hours depending on the recipient\'s bank and country.</p>
+              <p className="mt-4 text-slate-600">Most transfers complete within 24 hours. In some cases, it may take up to 48 hours depending on the recipient&apos;s bank and country.</p>
             </details>
 
             <details className="group border border-slate-200 rounded-lg p-6 hover:border-blue-300 cursor-pointer">
@@ -125,7 +125,7 @@ export default function HowItWorksPage(){
                 Can I cancel a voucher after sending it?
                 <span className="group-open:rotate-180 transition-transform">▼</span>
               </summary>
-              <p className="mt-4 text-slate-600">Yes! If the recipient hasn\'t redeemed it yet, you can cancel within 30 days and the funds will be returned to your account.</p>
+              <p className="mt-4 text-slate-600">Yes! If the recipient hasn&apos;t redeemed it yet, you can cancel within 30 days and the funds will be returned to your account.</p>
             </details>
 
             <details className="group border border-slate-200 rounded-lg p-6 hover:border-blue-300 cursor-pointer">

@@ -28,10 +28,10 @@ export default function AboutPage(){
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-6 text-slate-900">Our Mission</h2>
           <p className="text-lg text-slate-600 leading-relaxed mb-4">
-            ClanTip is a modern financial platform designed to bridge the gap between loved ones across Africa. We make it incredibly simple and secure to send financial support to family and friends, turning the concept of "tipping" into a meaningful way to show care and solidarity.
+            ClanTip is a modern financial platform designed to bridge the gap between loved ones across Africa. We make it incredibly simple and secure to send financial support to family and friends, turning the concept of &quot;tipping&quot; into a meaningful way to show care and solidarity.
           </p>
           <p className="text-lg text-slate-600 leading-relaxed">
-            Whether it's supporting a relative back home, helping a friend through a tough time, or celebrating a special occasion, ClanTip puts the power of instant financial support in your hands.
+            Whether it&apos;s supporting a relative back home, helping a friend through a tough time, or celebrating a special occasion, ClanTip puts the power of instant financial support in your hands.
           </p>
         </section>
 
