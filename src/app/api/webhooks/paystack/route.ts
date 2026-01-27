@@ -106,6 +106,11 @@ async function handleChargeSuccess(data: any) {
       })
     }
 
+    // Get recipient's UID from user doc (recipientId is phone, need UID for notifications)
+    const recipientUserRef = doc(db, 'users', metadata?.recipientId)
+    const recipientUserSnap = await getDoc(recipientUserRef)
+    const recipientUID = recipientUserSnap.exists() ? recipientUserSnap.data().id : metadata?.recipientId
+
     // Create notifications
     const notificationRef1 = doc(collection(db, 'notifications'))
     batch.set(notificationRef1, {
@@ -120,7 +125,7 @@ async function handleChargeSuccess(data: any) {
 
     const notificationRef2 = doc(collection(db, 'notifications'))
     batch.set(notificationRef2, {
-      userId: metadata?.recipientId,
+      userId: recipientUID,
       title: 'You Received a Gift!',
       body: `You received a support voucher worth R${(amount / 100).toFixed(2)}`,
       read: false,
