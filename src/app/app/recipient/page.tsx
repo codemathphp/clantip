@@ -66,7 +66,7 @@ export default function RecipientDashboard() {
 
           const vouchersQuery = query(
             collection(db, 'vouchers'),
-            where('recipientId', '==', authUser.uid)
+            where('recipientId', '==', phone)
           )
           const vouchersSnap = await getDocs(vouchersQuery)
           setVouchers(
@@ -92,6 +92,41 @@ export default function RecipientDashboard() {
 
     return () => unsubscribe()
   }, [router])
+
+  const handleRedeemVoucher = async (voucherToRedeem: Voucher) => {
+    try {
+      const response = await fetch('/api/vouchers/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voucherId: voucherToRedeem.id }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error)
+
+      toast.success(data.message)
+      
+      // Update local state
+      setVouchers(prev => prev.map(v => 
+        v.id === voucherToRedeem.id ? { ...v, status: 'redeemed' } : v
+      ))
+      if (selectedVoucher?.id === voucherToRedeem.id) {
+        setSelectedVoucher({ ...selectedVoucher, status: 'redeemed' })
+      }
+      
+      // Refresh wallet
+      if (user?.phone) {
+        const walletRef = doc(db, 'wallets', user.phone)
+        const walletSnap = await getDoc(walletRef)
+        if (walletSnap.exists()) {
+          setWallet(walletSnap.data() as Wallet)
+        }
+      }
+    } catch (error: any) {
+      console.error('Redeem voucher error:', error)
+      toast.error(error.message || 'Failed to redeem voucher')
+    }
+  }
 
   const handleRedeemCredits = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -458,8 +493,27 @@ export default function RecipientDashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-slate-200/50">
-                    <Button className="w-full h-12 rounded-2xl">
+                  <div className="mt-6 pt-6 border-t border-slate-200/50 space-y-3">
+                    {selectedVoucher.status === 'delivered' ? (
+                      <>
+                        <Button 
+                          onClick={() => handleRedeemVoucher(selectedVoucher)}
+                          className="w-full h-12 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                        >
+                          💰 Redeem to Balance
+                        </Button>
+                        <p className="text-xs text-center text-muted-foreground">
+                          Adds {formatCurrency(selectedVoucher.amount)} to your available credits
+                        </p>
+                      </>
+                    ) : (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                        <p className="text-sm text-green-900">
+                          ✓ This voucher has been redeemed to your balance
+                        </p>
+                      </div>
+                    )}
+                    <Button variant="outline" className="w-full h-12 rounded-2xl">
                       Print / Save Receipt
                     </Button>
                   </div>

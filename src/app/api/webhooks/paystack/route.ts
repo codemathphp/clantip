@@ -94,17 +94,8 @@ async function handleChargeSuccess(data: any) {
       updatedAt: Timestamp.now(),
     })
 
-    // Update recipient wallet
-    const walletRef = doc(db, 'wallets', metadata?.recipientId)
-    const walletSnap = await getDoc(walletRef)
-
-    if (walletSnap.exists()) {
-      const currentCredits = walletSnap.data().availableCredits || 0
-      batch.update(walletRef, {
-        availableCredits: currentCredits + amount,
-        updatedAt: Timestamp.now(),
-      })
-    }
+    // Vouchers are NOT automatically credited to wallet
+    // Recipients must explicitly redeem them via /api/vouchers/redeem
 
     // Get recipient's UID from user doc (recipientId is phone, need UID for notifications)
     const recipientUserRef = doc(db, 'users', metadata?.recipientId)
