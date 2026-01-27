@@ -285,8 +285,11 @@ export default function AdminDashboard() {
       const usersSnap = await getDocs(collection(db, 'users'))
 
       for (const userDoc of usersSnap.docs) {
+        const userData = userDoc.data() as any
+        const targetUserId = userData?.id || userDoc.id
+
         await addDoc(collection(db, 'notifications'), {
-          userId: userDoc.id,
+          userId: targetUserId,
           title: notificationTitle,
           body: notificationMessage,
           type: 'system',
