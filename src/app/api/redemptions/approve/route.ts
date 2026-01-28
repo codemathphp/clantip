@@ -3,6 +3,12 @@ import { db } from '@/firebase/config'
 import { doc, getDoc, updateDoc, writeBatch, collection, Timestamp } from 'firebase/firestore'
 import { createTransferRecipient, initiateTransfer } from '@/lib/paystack'
 
+// Helper to get exchange rates from settings
+async function getExchangeRates() {
+  const ratesDoc = await getDoc(doc(db, 'settings', 'exchangeRates'))
+  return ratesDoc.exists() ? (ratesDoc.data().rates || {}) : {}
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { redemptionId } = await request.json()
@@ -41,12 +47,21 @@ export async function POST(request: NextRequest) {
       let recipientCode = redemption.recipientCode
 
       if (!recipientCode) {
+        // Determine target currency. Default to ZAR; if redemption details include currency use it.
+        let targetCurrency = redemption.details?.currency || 'ZAR'
+
+        // Fallback: if bankCode matches South African banks, assume ZAR
+        const saBankCodes = ['030','031','032','033','034','035','036','037']
+        if (!redemption.details?.currency && saBankCodes.includes(redemption.details?.bankCode)) {
+          targetCurrency = 'ZAR'
+        }
+
         const recipientRes = await createTransferRecipient(
           'nuban',
           redemption.details.accountName,
           redemption.details.accountNumber,
           redemption.details.bankCode,
-          'ZAR'
+          targetCurrency
         )
 
         if (!recipientRes.status) {
@@ -56,10 +71,47 @@ export async function POST(request: NextRequest) {
         recipientCode = recipientRes.data.recipient_code
       }
 
+      // Determine amount to send in recipient currency smallest unit
+      // redemption.amount is stored in cents (ZAR cents) in our system
+      let amountInTargetSmallestUnit: number
+      const amountZar = (redemption.amount || 0) / 100
+
+      // Determine target currency (from recipientCode creation above or redemption.details)
+      const targetCurrency = redemption.details?.currency || 'ZAR'
+
+      if (targetCurrency === 'ZAR') {
+        // already in ZAR cents
+        amountInTargetSmallestUnit = Math.round(amountZar * 100)
+      } else {
+        // Need to convert from ZAR to target currency using stored exchange rates
+        const rates = await getExchangeRates()
+        // Expect a rate key like ZAR_TO_NGN or USD_TO_ZAR etc. First try direct ZAR_TO_<CUR>
+        const rateKey = `ZAR_TO_${targetCurrency}`
+        let rate = rates[rateKey]
+
+        if (!rate) {
+          // Try to compute via USD if USD_TO_ZAR and USD_TO_<CUR> exist
+          const usdToZar = rates['USD_TO_ZAR']
+          const usdToTarget = rates[`USD_TO_${targetCurrency}`]
+          if (usdToZar && usdToTarget) {
+            // ZAR -> USD -> target: amountZar / usdToZar * usdToTarget
+            rate = (1 / usdToZar) * usdToTarget
+          }
+        }
+
+        if (!rate) {
+          throw new Error(`Missing exchange rate for conversion to ${targetCurrency}`)
+        }
+
+        const amountInTarget = amountZar * rate
+        // Convert to smallest unit (cents) assuming 100 subunits
+        amountInTargetSmallestUnit = Math.round(amountInTarget * 100)
+      }
+
       // Initiate transfer
       const transferRes = await initiateTransfer(
         recipientCode,
-        redemption.amount, // in kobo
+        amountInTargetSmallestUnit,
         'ClanTip Redemption',
         redemptionId,
         'balance'

@@ -64,6 +64,16 @@ export default function AdminDashboard() {
   const [newVoucher, setNewVoucher] = useState({ label: '', amount: '' })
   const [notificationMessage, setNotificationMessage] = useState('')
   const [notificationTitle, setNotificationTitle] = useState('')
+  const [exchangeRates, setExchangeRates] = useState({
+    ZAR_TO_NGN: 46.5,
+    ZAR_TO_GHS: 0.48,
+    ZAR_TO_KES: 8.1,
+    USD_TO_ZAR: 18.5,
+    USD_TO_NGN: 850,
+    USD_TO_GHS: 11.5,
+    USD_TO_KES: 154,
+  })
+  const [lastExchangeRateUpdate, setLastExchangeRateUpdate] = useState<string>('')
 
   // Define loadDashboardData before useEffect to avoid dependency array issues
   const loadDashboardData = useCallback(async () => {
@@ -158,15 +168,48 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error loading settings:', error)
     }
+
+    // Load exchange rates from API
+    try {
+      const response = await fetch('/api/admin/exchange-rates')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.data?.rates) {
+          setExchangeRates(data.data.rates)
+        }
+        if (data.data?.updatedAt) {
+          const date = new Date(data.data.updatedAt)
+          setLastExchangeRateUpdate(date.toLocaleString())
+        }
+      }
+    } catch (error) {
+      console.error('Error loading exchange rates:', error)
+    }
   }
 
   const handleApproveRedemption = async (redemptionId: string) => {
     try {
+      // Mark approved in Firestore first
       await updateDoc(doc(db, 'redemptions', redemptionId), {
         status: 'approved',
         updatedAt: serverTimestamp(),
       })
-      toast.success('Redemption approved')
+
+      // Call server endpoint to initiate transfer (creates recipient + transfer)
+      const res = await fetch('/api/redemptions/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redemptionId }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        console.error('Approve API error:', data)
+        toast.error(data.error || 'Failed to initiate transfer')
+      } else {
+        toast.success('Redemption approved and transfer initiated')
+      }
+
       await loadDashboardData()
     } catch (error) {
       console.error('Error approving:', error)
@@ -271,6 +314,33 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error saving settings:', error)
       toast.error('Failed to save settings')
+    }
+  }
+
+  const handleSaveExchangeRates = async () => {
+    try {
+      const response = await fetch('/api/admin/exchange-rates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rates: exchangeRates }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to save exchange rates')
+      }
+
+      const data = await response.json()
+      if (data.data?.updatedAt) {
+        const date = new Date(data.data.updatedAt)
+        setLastExchangeRateUpdate(date.toLocaleString())
+      }
+      toast.success('Exchange rates saved successfully')
+    } catch (error) {
+      console.error('Error saving exchange rates:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to save exchange rates')
     }
   }
 
@@ -861,6 +931,142 @@ export default function AdminDashboard() {
 
                 <Button onClick={handleSaveSettings} size="lg" className="bg-primary hover:bg-primary/90 w-full md:w-auto">
                   ✓ Save Settings
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Exchange Rates Card */}
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp size={24} className="text-blue-600" />
+                  Exchange Rates
+                </CardTitle>
+                <CardDescription>
+                  Manage currency exchange rates for multi-country transfers
+                  {lastExchangeRateUpdate && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Last updated: {lastExchangeRateUpdate}
+                    </div>
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* ZAR to NGN */}
+                  <div className="space-y-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800">
+                    <Label className="font-semibold text-sm">ZAR → NGN</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={exchangeRates.ZAR_TO_NGN}
+                      onChange={(e) =>
+                        setExchangeRates({ ...exchangeRates, ZAR_TO_NGN: parseFloat(e.target.value) })
+                      }
+                      className="border-slate-200 dark:border-slate-800"
+                    />
+                    <p className="text-xs text-muted-foreground">South Africa → Nigeria</p>
+                  </div>
+
+                  {/* ZAR to GHS */}
+                  <div className="space-y-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800">
+                    <Label className="font-semibold text-sm">ZAR → GHS</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={exchangeRates.ZAR_TO_GHS}
+                      onChange={(e) =>
+                        setExchangeRates({ ...exchangeRates, ZAR_TO_GHS: parseFloat(e.target.value) })
+                      }
+                      className="border-slate-200 dark:border-slate-800"
+                    />
+                    <p className="text-xs text-muted-foreground">South Africa → Ghana</p>
+                  </div>
+
+                  {/* ZAR to KES */}
+                  <div className="space-y-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800">
+                    <Label className="font-semibold text-sm">ZAR → KES</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={exchangeRates.ZAR_TO_KES}
+                      onChange={(e) =>
+                        setExchangeRates({ ...exchangeRates, ZAR_TO_KES: parseFloat(e.target.value) })
+                      }
+                      className="border-slate-200 dark:border-slate-800"
+                    />
+                    <p className="text-xs text-muted-foreground">South Africa → Kenya</p>
+                  </div>
+
+                  {/* USD to ZAR */}
+                  <div className="space-y-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800">
+                    <Label className="font-semibold text-sm">USD → ZAR</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={exchangeRates.USD_TO_ZAR}
+                      onChange={(e) =>
+                        setExchangeRates({ ...exchangeRates, USD_TO_ZAR: parseFloat(e.target.value) })
+                      }
+                      className="border-slate-200 dark:border-slate-800"
+                    />
+                    <p className="text-xs text-muted-foreground">USD Bridge Rate</p>
+                  </div>
+
+                  {/* USD to NGN */}
+                  <div className="space-y-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800">
+                    <Label className="font-semibold text-sm">USD → NGN</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={exchangeRates.USD_TO_NGN}
+                      onChange={(e) =>
+                        setExchangeRates({ ...exchangeRates, USD_TO_NGN: parseFloat(e.target.value) })
+                      }
+                      className="border-slate-200 dark:border-slate-800"
+                    />
+                    <p className="text-xs text-muted-foreground">USD Bridge Rate</p>
+                  </div>
+
+                  {/* USD to GHS */}
+                  <div className="space-y-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800">
+                    <Label className="font-semibold text-sm">USD → GHS</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={exchangeRates.USD_TO_GHS}
+                      onChange={(e) =>
+                        setExchangeRates({ ...exchangeRates, USD_TO_GHS: parseFloat(e.target.value) })
+                      }
+                      className="border-slate-200 dark:border-slate-800"
+                    />
+                    <p className="text-xs text-muted-foreground">USD Bridge Rate</p>
+                  </div>
+
+                  {/* USD to KES */}
+                  <div className="space-y-2 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800">
+                    <Label className="font-semibold text-sm">USD → KES</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={exchangeRates.USD_TO_KES}
+                      onChange={(e) =>
+                        setExchangeRates({ ...exchangeRates, USD_TO_KES: parseFloat(e.target.value) })
+                      }
+                      className="border-slate-200 dark:border-slate-800"
+                    />
+                    <p className="text-xs text-muted-foreground">USD Bridge Rate</p>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-900 dark:text-blue-200">
+                    <span className="font-semibold">💡 Tip:</span> Direct rates (ZAR_TO_*) are preferred. USD bridge rates are used as fallback for conversions not directly available.
+                  </p>
+                </div>
+
+                <Button onClick={handleSaveExchangeRates} size="lg" className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto">
+                  💱 Save Exchange Rates
                 </Button>
               </CardContent>
             </Card>

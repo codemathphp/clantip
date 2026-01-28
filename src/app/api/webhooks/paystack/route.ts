@@ -164,12 +164,16 @@ async function handleTransferSuccess(data: any) {
     if (redemptionSnap.exists()) {
       const redemption = redemptionSnap.data()
 
+      // Prefer transfer amount/currency from webhook data when available
+      const paidAmount = data?.amount ? (data.amount / 100) : (redemption.amount / 100)
+      const paidCurrency = data?.currency || 'ZAR'
+
       // Create notification
       const notificationRef = doc(collection(db, 'notifications'))
       await setDoc(notificationRef, {
         userId: redemption.userId,
         title: 'Redemption Completed',
-        body: `Your redemption of R${(redemption.amount / 100).toFixed(2)} has been successfully paid`,
+        body: `Your redemption of ${paidCurrency} ${paidAmount.toFixed(2)} has been successfully paid`,
         read: false,
         type: 'redemption',
         relatedId: reference,
