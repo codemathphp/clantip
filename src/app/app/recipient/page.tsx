@@ -144,6 +144,46 @@ export default function RecipientDashboard() {
     }
   }
 
+  const handleShareReceipt = async (voucher: Voucher) => {
+    if (!user) return
+
+    const receiptText = `
+💰 Gift Receipt - ClanTip
+
+Amount Received: ${formatCurrency(voucher.amount)}
+Receipt Number: ${voucher.code}
+From: ${user?.fullName || 'Unknown'}
+Date: ${formatDate(voucher.createdAt)}
+
+✓ This gift has been received on ClanTip
+    `
+
+    // Try to use Web Share API if available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'ClanTip Gift Receipt',
+          text: receiptText,
+        })
+        toast.success('Receipt shared successfully!')
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error)
+          toast.error('Failed to share receipt')
+        }
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(receiptText)
+        toast.success('Receipt copied to clipboard!')
+      } catch (error) {
+        console.error('Error copying:', error)
+        toast.error('Failed to copy receipt')
+      }
+    }
+  }
+
   const formatDate = (timestamp: any) => {
     try {
       if (!timestamp) return 'N/A'
@@ -519,8 +559,12 @@ export default function RecipientDashboard() {
                         </p>
                       </div>
                     )}
-                    <Button variant="outline" className="w-full h-12 rounded-2xl">
-                      Print / Save Receipt
+                    <Button 
+                      onClick={() => handleShareReceipt(selectedVoucher)}
+                      variant="outline" 
+                      className="w-full h-12 rounded-2xl"
+                    >
+                      📤 Share Receipt
                     </Button>
                   </div>
                 </div>
@@ -766,8 +810,11 @@ export default function RecipientDashboard() {
                   </div>
 
                   <div className="mt-6 pt-6 border-t border-slate-200/50">
-                    <Button className="w-full h-12 rounded-2xl">
-                      Print / Save Receipt
+                    <Button 
+                      onClick={() => handleShareReceipt(selectedRedemption as any)}
+                      className="w-full h-12 rounded-2xl"
+                    >
+                      📤 Share Receipt
                     </Button>
                   </div>
                 </div>

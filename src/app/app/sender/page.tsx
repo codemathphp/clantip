@@ -138,6 +138,53 @@ export default function SenderDashboard() {
     }
   }
 
+  const handleShareReceipt = async (voucher: Voucher) => {
+    if (!user) return
+
+    const receiptText = `
+💰 Gift Sent Receipt - ClanTip
+
+Amount Sent: ${formatCurrency(voucher.amount)}
+Receipt Number: ${voucher.code}
+To: ${voucher.recipientId}
+Date: ${new Date(voucher.createdAt).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})}
+
+✓ Gift sent successfully via ClanTip
+Recipient has been notified
+    `
+
+    // Try to use Web Share API if available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'ClanTip Gift Receipt',
+          text: receiptText,
+        })
+        toast.success('Receipt shared successfully!')
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error('Error sharing:', error)
+          toast.error('Failed to share receipt')
+        }
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(receiptText)
+        toast.success('Receipt copied to clipboard!')
+      } catch (error) {
+        console.error('Error copying:', error)
+        toast.error('Failed to copy receipt')
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-accent/5">
@@ -562,7 +609,7 @@ export default function SenderDashboard() {
                 {vouchers.map((voucher) => (
                   <div key={voucher.id} className="bg-white rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold">{formatCurrency(voucher.amount)}</p>
                         <p className="text-xs text-muted-foreground font-mono">Code: {voucher.code}</p>
                         {voucher.message && (
@@ -571,9 +618,17 @@ export default function SenderDashboard() {
                       </div>
                       <Badge variant="outline">{voucher.status}</Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground mb-3">
                       {new Date(voucher.createdAt).toLocaleDateString()}
                     </p>
+                    <Button
+                      onClick={() => handleShareReceipt(voucher)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs h-8"
+                    >
+                      📤 Share Receipt
+                    </Button>
                   </div>
                 ))}
               </div>
