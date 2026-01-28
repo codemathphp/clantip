@@ -506,10 +506,16 @@ export default function RecipientDashboard() {
                           Adds {formatCurrency(selectedVoucher.amount)} to your available credits
                         </p>
                       </>
-                    ) : (
+                    ) : selectedVoucher.status === 'redeemed' || selectedVoucher.status === 'paid' ? (
                       <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
                         <p className="text-sm text-green-900">
                           ✓ This voucher has been redeemed to your balance
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                        <p className="text-sm text-slate-600">
+                          This voucher is being processed
                         </p>
                       </div>
                     )}
