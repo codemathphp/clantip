@@ -43,14 +43,19 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             .map(doc => ({ id: doc.id, ...doc.data() } as Notification))
             .sort((a, b) => b.createdAt.valueOf() - a.createdAt.valueOf())
           
+          console.log(`🔔 [NotificationContext] Received ${notifs.length} notifications for user ${user.uid}`, notifs)
+          
           // Check if new notifications have arrived
           if (notifs.length > previousCountRef.current && previousCountRef.current > 0) {
+            console.log('🔊 Playing notification sound - new notification received')
             playNotificationSound()
           }
           
           previousCountRef.current = notifs.length
           setNotifications(notifs)
           setLoading(false)
+        }, (error) => {
+          console.error('❌ Error in notifications listener:', error)
         })
 
         return () => unsubscribeNotifications()

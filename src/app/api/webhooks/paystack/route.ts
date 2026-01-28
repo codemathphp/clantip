@@ -59,6 +59,12 @@ async function handleChargeSuccess(data: any) {
       return NextResponse.json({ success: true, cached: true })
     }
 
+    // Get original payment record to retrieve conversion info
+    const originalPayment = paymentSnap.exists() ? paymentSnap.data() : null
+    const convertedAmount = originalPayment?.convertedAmount || (amount / 100) // amount from Paystack is in kobo
+    const originalAmount = originalPayment?.originalAmount || convertedAmount
+    const originalCurrency = originalPayment?.originalCurrency || 'ZAR'
+
     const batch = writeBatch(db)
 
     // Update payment status
@@ -67,7 +73,10 @@ async function handleChargeSuccess(data: any) {
       {
         reference,
         payerId: metadata?.senderId || 'unknown',
-        amount,
+        amount, // Keep in kobo
+        amountInZAR: convertedAmount,
+        originalAmount,
+        originalCurrency,
         currency: 'ZAR',
         status: 'successful',
         paystackData: data,
@@ -87,7 +96,9 @@ async function handleChargeSuccess(data: any) {
       paymentRef: reference,
       senderId: metadata?.senderId,
       recipientId: metadata?.recipientId,
-      amount,
+      amount: convertedAmount, // Store in ZAR (as decimal, NOT kobo)
+      originalAmount,
+      originalCurrency,
       message: metadata?.message || '',
       status: 'delivered',
       createdAt: Timestamp.now(),
@@ -107,7 +118,7 @@ async function handleChargeSuccess(data: any) {
     batch.set(notificationRef1, {
       userId: metadata?.senderId,
       title: 'Gift Sent Successfully',
-      body: `Your support voucher worth R${(amount / 100).toFixed(2)} was delivered`,
+      body: `Your support voucher worth R${convertedAmount.toFixed(2)} was delivered`,
       read: false,
       type: 'voucher',
       relatedId: voucherId,
@@ -118,7 +129,7 @@ async function handleChargeSuccess(data: any) {
     batch.set(notificationRef2, {
       userId: recipientUID,
       title: 'You Received a Gift!',
-      body: `You received a support voucher worth R${(amount / 100).toFixed(2)}`,
+      body: `You received a support voucher worth R${convertedAmount.toFixed(2)}`,
       read: false,
       type: 'voucher',
       relatedId: voucherId,

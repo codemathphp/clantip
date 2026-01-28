@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/firebase/config'
 import { doc, getDoc, updateDoc, writeBatch, Timestamp } from 'firebase/firestore'
-import { auth } from '@/firebase/config'
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,15 +10,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Voucher ID required' },
         { status: 400 }
-      )
-    }
-
-    // Get current user from Firebase Auth header (Vercel will pass this)
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
       )
     }
 
@@ -35,11 +25,6 @@ export async function POST(request: NextRequest) {
     }
 
     const voucher = voucherSnap.data()
-
-    // Verify the current user is the recipient
-    // The client will send the user's UID, we validate against voucher.recipientId (phone)
-    // For security, the client should pass their phone/UID which we can verify
-    // For now, we'll trust the client (next step: verify via Firebase admin SDK)
     
     if (voucher.status !== 'delivered') {
       return NextResponse.json(
@@ -58,6 +43,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Add amount to recipient's available credits
+    // amount is stored in ZAR as whole number (not kobo)
     const walletRef = doc(db, 'wallets', voucher.recipientId)
     const walletSnap = await getDoc(walletRef)
 
@@ -82,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Voucher redeemed successfully. R${(voucher.amount / 100).toFixed(2)} added to your balance.`,
+      message: `Voucher redeemed successfully. R${voucher.amount.toFixed(2)} added to your balance.`,
       amount: voucher.amount,
     })
   } catch (error) {
