@@ -6,7 +6,7 @@ import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
 import { User, Voucher, Wallet, Redemption } from '@/types'
-import { formatCurrency, SA_BANKS } from '@/lib/constants'
+import { formatCurrency, SA_BANKS, SUPPORTED_COUNTRIES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -35,6 +35,24 @@ export default function RecipientDashboard() {
     accountName: '',
     amount: '',
   })
+  const [exchangeRates, setExchangeRates] = useState<any>(null)
+
+  useEffect(() => {
+    // Load exchange rates for converting ZAR -> recipient currency
+    const loadRates = async () => {
+      try {
+        const res = await fetch('/api/admin/exchange-rates')
+        if (res.ok) {
+          const json = await res.json()
+          const rates = json.data?.rates || json?.rates || null
+          setExchangeRates(rates)
+        }
+      } catch (e) {
+        console.error('Failed to load exchange rates', e)
+      }
+    }
+    loadRates()
+  }, [])
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (authUser: any) => {
@@ -219,6 +237,64 @@ Date: ${formatDate(voucher.createdAt)}
         </div>
       </div>
     )
+  }
+
+  // Helper: convert ZAR amount (in subunits/cents) to target currency amount
+  const convertZarToTarget = (zarSubunits: number, targetCurrency: string) => {
+    try {
+      if (!exchangeRates) return null
+      const amountZar = zarSubunits / 100
+
+      // Direct ZAR -> target
+      const directKey = `ZAR_TO_${targetCurrency}`
+      if (exchangeRates[directKey]) {
+        return amountZar * exchangeRates[directKey]
+      }
+
+      // Target is USD: use USD_TO_ZAR to invert
+      if (targetCurrency === 'USD' && exchangeRates['USD_TO_ZAR']) {
+        return amountZar / exchangeRates['USD_TO_ZAR']
+      }
+
+      // Fallback: via USD bridge
+      if (exchangeRates['USD_TO_ZAR'] && exchangeRates[`USD_TO_${targetCurrency}`]) {
+        const usdToZar = exchangeRates['USD_TO_ZAR']
+        const usdToTarget = exchangeRates[`USD_TO_${targetCurrency}`]
+        const rate = (1 / usdToZar) * usdToTarget
+        return amountZar * rate
+      }
+
+      return null
+    } catch (e) {
+      console.error('Conversion error', e)
+      return null
+    }
+  }
+
+  const getCurrencySymbol = (currency: string) => {
+    const found = SUPPORTED_COUNTRIES.find((c: any) => c.currency === currency)
+    if (found) return found.symbol
+    // Add Zimbabwe mapping if needed
+    if (currency === 'ZWL' || currency === 'ZW') return 'Z$'
+    if (currency === 'USD') return '$'
+    return currency
+  }
+
+  const formatVoucherAmount = (voucher: any) => {
+    try {
+      const target = voucher.originalCurrency || voucher.recipientCurrency || 'ZAR'
+      if (target === 'ZAR') {
+        // amount stored as subunits
+        return formatCurrency(voucher.amount)
+      }
+
+      const converted = convertZarToTarget(voucher.amount, target)
+      if (converted === null) return formatCurrency(voucher.amount)
+      const sym = getCurrencySymbol(target)
+      return `${sym} ${Number(converted).toFixed(2)}`
+    } catch (e) {
+      return formatCurrency(voucher.amount)
+    }
   }
 
   return (

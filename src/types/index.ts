@@ -50,6 +50,8 @@ export interface Voucher {
   senderId: string
   recipientId: string
   amount: number // in ZAR cents
+  originalAmount?: number // original amount in sender's currency (smallest unit)
+  originalCurrency?: string // sender's original currency (e.g., 'USD')
   message?: string
   status: VoucherStatus
   createdAt: Date
