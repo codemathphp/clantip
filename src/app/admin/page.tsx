@@ -78,6 +78,9 @@ export default function AdminDashboard() {
   // Define loadDashboardData before useEffect to avoid dependency array issues
   const loadDashboardData = useCallback(async () => {
     try {
+      // Ensure exchange rates are loaded first (used for currency conversion back to USD)
+      await loadSettings()
+
       // Load stats
       const usersSnap = await getDocs(collection(db, 'users'))
       const paymentsSnap = await getDocs(collection(db, 'payments'))
@@ -86,16 +89,31 @@ export default function AdminDashboard() {
         query(collection(db, 'redemptions'), where('status', '==', 'requested'))
       )
 
-      // Sum payment amounts (expected stored in cents) to compute total revenue
-      const totalPaymentAmount = paymentsSnap.docs.reduce((sum, d) => {
+      // Compute total revenue in USD.
+      // Prefer using originalAmount when originalCurrency === 'USD'. Otherwise convert stored ZAR (convertedAmount) to USD using USD_TO_ZAR rate.
+      const usdRate = (exchangeRates && exchangeRates.USD_TO_ZAR) || 0
+      const totalUsd = paymentsSnap.docs.reduce((sum, d) => {
         const data = d.data() as any
-        const amount = typeof data?.amount === 'number' ? data.amount : 0
-        return sum + amount / 100
+        // If the payment records include the original amount and currency, prefer that
+        if (data?.originalCurrency === 'USD' && typeof data?.originalAmount === 'number') {
+          return sum + data.originalAmount
+        }
+
+        // Fallback: use convertedAmount (ZAR) if present, otherwise amount (kobo) -> ZAR
+        const zarAmount = typeof data?.convertedAmount === 'number'
+          ? data.convertedAmount
+          : (typeof data?.amount === 'number' ? data.amount / 100 : 0)
+
+        if (usdRate && usdRate > 0) {
+          return sum + (zarAmount / usdRate)
+        }
+
+        return sum
       }, 0)
 
       setDashboardData({
         totalUsers: usersSnap.size,
-        totalPayments: Math.round(totalPaymentAmount * 100) / 100,
+        totalPayments: Math.round(totalUsd * 100) / 100,
         totalVouchers: vouchersSnap.size,
         pendingRedemptions: redemptionsSnap.size,
       })
@@ -518,7 +536,7 @@ export default function AdminDashboard() {
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Total Payments
+                        Total Revenue (USD)
                       </CardTitle>
                       <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/20">
                         <DollarSign size={20} className="text-green-600" />
@@ -526,7 +544,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-4xl font-bold text-foreground">${dashboardData.totalPayments}</p>
+                    <p className="text-4xl font-bold text-foreground">${dashboardData.totalPayments.toFixed(2)}</p>
                     <p className="text-xs text-muted-foreground mt-1">Processed</p>
                   </CardContent>
                 </Card>
