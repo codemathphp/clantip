@@ -86,9 +86,16 @@ export default function AdminDashboard() {
         query(collection(db, 'redemptions'), where('status', '==', 'requested'))
       )
 
+      // Sum payment amounts (expected stored in cents) to compute total revenue
+      const totalPaymentAmount = paymentsSnap.docs.reduce((sum, d) => {
+        const data = d.data() as any
+        const amount = typeof data?.amount === 'number' ? data.amount : 0
+        return sum + amount / 100
+      }, 0)
+
       setDashboardData({
         totalUsers: usersSnap.size,
-        totalPayments: paymentsSnap.size,
+        totalPayments: Math.round(totalPaymentAmount * 100) / 100,
         totalVouchers: vouchersSnap.size,
         pendingRedemptions: redemptionsSnap.size,
       })

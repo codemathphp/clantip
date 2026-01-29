@@ -8,14 +8,18 @@ export async function GET() {
     const ratesDoc = await getDoc(doc(db, 'settings', 'exchangeRates'))
     
     if (!ratesDoc.exists()) {
-      // Return default rates if not set
+      // Return default rates if not set - include direct ZAR pairs and USD bridge rates
       return NextResponse.json({
         success: true,
         data: {
           rates: {
-            USD_TO_ZAR: 18.50,
-            GBP_TO_ZAR: 23.50,
-            EUR_TO_ZAR: 20.00,
+            ZAR_TO_NGN: 46.5,
+            ZAR_TO_GHS: 0.48,
+            ZAR_TO_KES: 8.1,
+            USD_TO_ZAR: 18.5,
+            USD_TO_NGN: 850,
+            USD_TO_GHS: 11.5,
+            USD_TO_KES: 154,
           },
           updatedAt: new Date().toISOString(),
         },
