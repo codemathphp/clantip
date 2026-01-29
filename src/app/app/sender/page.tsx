@@ -35,8 +35,8 @@ export default function SenderDashboard() {
   ])
   const [giftForm, setGiftForm] = useState({
     recipientPhone: '',
+    recipientCountry: 'ZA',
     amount: '',
-    currency: 'USD',
     message: '',
   })
 
@@ -139,7 +139,8 @@ export default function SenderDashboard() {
           fixedFee,
           total,
           recipientPhone: giftForm.recipientPhone,
-          currency: giftForm.currency,
+          recipientCountry: giftForm.recipientCountry,
+          currency: 'USD',
           message: giftForm.message,
           timestamp: Date.now(),
         })
@@ -254,13 +255,11 @@ Recipient has been notified
     return currency
   }
 
-  // Format amount for sender: show original currency + what recipient gets
+  // Format amount for sender: show USD amount sent + what recipient gets in their currency
   const formatSenderVoucherAmount = (voucher: any) => {
     try {
-      // Original currency is what the sender sent
-      const senderCurrency = voucher.originalCurrency || 'USD'
+      // Senders always send in USD
       const senderAmount = voucher.originalAmount || 0
-      const sym = getCurrencySymbol(senderCurrency)
       
       // Recipient currency and what they'll receive
       const recipientCurrency = voucher.recipientCurrency || 'ZAR'
@@ -268,9 +267,9 @@ Recipient has been notified
       const recipientSym = getCurrencySymbol(recipientCurrency)
 
       return {
-        mainAmount: `${sym} ${Number(senderAmount).toFixed(2)}`,
+        mainAmount: `$${Number(senderAmount).toFixed(2)}`,
         subtitle: recipientConverted !== null 
-          ? `Recipient gets ${recipientSym} ${Number(recipientConverted).toFixed(2)} (${recipientCurrency})`
+          ? `Recipient gets ${recipientSym} ${Number(recipientConverted).toFixed(2)}`
           : `Recipient gets ${formatCurrency(voucher.amount)}`,
       }
     } catch (e) {
@@ -561,14 +560,14 @@ Recipient has been notified
                   <select
                     id="country"
                     className="w-full px-3 py-2 border border-slate-200/50 rounded-2xl text-sm"
-                    value={giftForm.currency}
+                    value={giftForm.recipientCountry}
                     onChange={(e) =>
-                      setGiftForm({ ...giftForm, currency: e.target.value })
+                      setGiftForm({ ...giftForm, recipientCountry: e.target.value })
                     }
                   >
                     {SUPPORTED_COUNTRIES.map((country) => (
-                      <option key={country.currency} value={country.currency}>
-                        {country.name}
+                      <option key={country.code} value={country.code}>
+                        {country.name} ({country.currency})
                       </option>
                     ))}
                   </select>
@@ -576,12 +575,13 @@ Recipient has been notified
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="amount" className="text-sm font-medium">Amount ({giftForm.currency})</Label>
+                  <Label htmlFor="amount" className="text-sm font-medium">Amount (USD)</Label>
                   <Input
                     id="amount"
                     type="number"
-                    placeholder={giftForm.currency === 'USD' ? '100' : '500'}
-                    min="10"
+                    placeholder="50"
+                    min="1"
+                    step="0.01"
                     value={giftForm.amount}
                     onChange={(e) =>
                       setGiftForm({ ...giftForm, amount: e.target.value })

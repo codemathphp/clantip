@@ -55,17 +55,24 @@ export default function PaymentCallbackPage() {
             const paystackAmountKobo = result.data?.amount || null
             const amountToStore = paystackAmountKobo !== null ? paystackAmountKobo : Math.round((data.baseAmount || 0) * 100)
 
-            // Infer recipient currency from phone number
+            // Infer recipient currency from selected country
             let recipientCurrency = 'ZAR' // default
-            if (data.recipientPhone) {
-              if (data.recipientPhone.startsWith('+234')) {
-                recipientCurrency = 'NGN'
-              } else if (data.recipientPhone.startsWith('+254')) {
-                recipientCurrency = 'KES'
-              } else if (data.recipientPhone.startsWith('+233')) {
-                recipientCurrency = 'GHS'
-              } else if (data.recipientPhone.startsWith('+27') || data.recipientPhone.startsWith('+263')) {
-                recipientCurrency = 'ZAR'
+            if (data.recipientCountry) {
+              switch(data.recipientCountry) {
+                case 'NG':
+                  recipientCurrency = 'NGN'
+                  break
+                case 'KE':
+                  recipientCurrency = 'KES'
+                  break
+                case 'GH':
+                  recipientCurrency = 'GHS'
+                  break
+                case 'ZA':
+                case 'ZW':
+                default:
+                  recipientCurrency = 'ZAR'
+                  break
               }
             }
 
@@ -78,9 +85,9 @@ export default function PaymentCallbackPage() {
               recipientId: data.recipientPhone, // Use phone as ID for consistency
               // `amount` stored as ZAR subunits (cents/kobo) so existing UI formatting works
               amount: amountToStore,
-              // Preserve original payer currency and amount for correct display to sender
+              // Senders always send in USD - store original USD amount
               originalAmount: data.baseAmount,
-              originalCurrency: data.currency || 'USD',
+              originalCurrency: 'USD',
               // Store recipient's currency for display
               recipientCurrency: recipientCurrency,
               status: 'delivered',
