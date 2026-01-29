@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc, onSnapshot } from 'firebase/firestore'
 import { User, Voucher, Wallet, Redemption } from '@/types'
 import { formatCurrency, SA_BANKS, SUPPORTED_COUNTRIES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -55,17 +55,15 @@ export default function RecipientDashboard() {
   }, [])
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (authUser: any) => {
-      if (!authUser) {
-        router.push('/auth')
-        return
-      }
+    let unsubscribeVouchers: (() => void) | null = null
 
+    const setupData = async (authUser: any) => {
       try {
         // Get phone from auth user
         const phone = authUser.phoneNumber
         if (!phone) {
           console.error('No phone number in auth user')
+          setLoading(false)
           return
         }
 
@@ -82,14 +80,16 @@ export default function RecipientDashboard() {
             setWallet(walletSnap.data() as Wallet)
           }
 
+          // Set up REAL-TIME listener for vouchers so new gifts appear immediately
           const vouchersQuery = query(
             collection(db, 'vouchers'),
             where('recipientId', '==', phone)
           )
-          const vouchersSnap = await getDocs(vouchersQuery)
-          setVouchers(
-            vouchersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
-          )
+          unsubscribeVouchers = onSnapshot(vouchersQuery, (snapshot) => {
+            const vouchersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
+            setVouchers(vouchersList)
+            console.log(`🔔 [Recipient] Updated ${vouchersList.length} vouchers in real-time`)
+          })
 
           const redemptionsQuery = query(
             collection(db, 'redemptions'),
@@ -99,16 +99,32 @@ export default function RecipientDashboard() {
           setRedemptions(
             redemptionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Redemption))
           )
+
+          setLoading(false)
+        } else {
+          setLoading(false)
         }
       } catch (error) {
         console.error('Error fetching data:', error)
         toast.error('Failed to load dashboard')
-      } finally {
         setLoading(false)
       }
+    }
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (authUser: any) => {
+      if (!authUser) {
+        router.push('/auth')
+        return
+      }
+      setupData(authUser)
     })
 
-    return () => unsubscribe()
+    return () => {
+      unsubscribeAuth()
+      if (unsubscribeVouchers) {
+        unsubscribeVouchers()
+      }
+    }
   }, [router])
 
   const handleRedeemVoucher = async (voucherToRedeem: Voucher) => {

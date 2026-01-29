@@ -260,64 +260,68 @@ export default function NotificationsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`bg-white rounded-2xl p-4 border-l-4 border border-slate-200/50 transition hover:shadow-md ${getNotificationColor(notification.type)}`}
+                className={`bg-white rounded-lg p-3 border-l-4 border border-slate-200/50 transition hover:shadow-sm ${getNotificationColor(notification.type)}`}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3">
                   {/* Icon */}
-                  <div className="text-3xl flex-shrink-0 mt-1">
+                  <div className="text-2xl flex-shrink-0 mt-0.5">
                     {getNotificationIcon(notification.type)}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
-                        <h3 className="font-bold text-base text-foreground">
+                        <h3 className="font-bold text-sm text-foreground">
                           {notification.title}
                         </h3>
-                        <Badge className={`mt-2 ${getBadgeColor(notification.type)}`}>
-                          {notification.type || 'notification'}
-                        </Badge>
                       </div>
                       {!notification.read && (
-                        <div className="w-3 h-3 bg-primary rounded-full flex-shrink-0 mt-2" />
+                        <div className="w-2.5 h-2.5 bg-primary rounded-full flex-shrink-0 mt-0.5" />
                       )}
                     </div>
 
-                    <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+                    <p className="text-xs text-muted-foreground mt-1 leading-snug line-clamp-2">
                       {notification.body}
                     </p>
 
-                    <p className="text-xs text-muted-foreground mt-3">
-                      {formatTime(notification.createdAt)}
-                    </p>
-                  </div>
+                    <div className="flex items-center justify-between gap-2 mt-2">
+                      <div className="flex gap-1">
+                        <Badge className={`text-xs py-0.5 px-2 ${getBadgeColor(notification.type)}`}>
+                          {notification.type || 'notification'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTime(notification.createdAt)}
+                        </span>
+                      </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2 flex-shrink-0">
-                    {!notification.read && (
-                      <button
-                        onClick={() => markAsRead(notification.id)}
-                        className="p-2 hover:bg-slate-200 rounded-lg transition text-muted-foreground hover:text-foreground"
-                        title="Mark as read"
-                      >
-                        <CheckCheck size={18} />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        deleteNotification(notification.id)
-                        toast.success('Notification deleted')
-                      }}
-                      className="p-2 hover:bg-red-100 rounded-lg transition text-muted-foreground hover:text-red-600"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                      {/* Actions */}
+                      <div className="flex gap-1 flex-shrink-0">
+                        {!notification.read && (
+                          <button
+                            onClick={() => markAsRead(notification.id)}
+                            className="p-1 hover:bg-slate-200 rounded transition text-muted-foreground hover:text-foreground"
+                            title="Mark as read"
+                          >
+                            <CheckCheck size={14} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            deleteNotification(notification.id)
+                            toast.success('Notification deleted')
+                          }}
+                          className="p-1 hover:bg-red-100 rounded transition text-muted-foreground hover:text-red-600"
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

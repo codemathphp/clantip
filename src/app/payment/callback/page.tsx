@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, setDoc, Timestamp } from 'firebase/firestore'
+import { doc, setDoc, Timestamp, collection, addDoc } from 'firebase/firestore'
 import toast from 'react-hot-toast'
 
 export default function PaymentCallbackPage() {
@@ -75,6 +75,26 @@ export default function PaymentCallbackPage() {
             })
             
             console.log('✓ Voucher created:', voucherId)
+            
+            // Create notification for recipient immediately
+            try {
+              const senderName = authUser.displayName || 'Someone'
+              const amountDisplay = data.baseAmount ? `${data.currency} ${Number(data.baseAmount).toFixed(2)}` : `ZAR ${Number(amountToStore / 100).toFixed(2)}`
+              
+              await addDoc(collection(db, 'notifications'), {
+                userId: data.recipientPhone,
+                title: '🎁 You received a gift!',
+                body: `${senderName} sent you ${amountDisplay}. Redeem it to add to your wallet.`,
+                type: 'voucher',
+                relatedId: voucherId,
+                read: false,
+                createdAt: Timestamp.now(),
+              })
+              console.log('✓ Notification created for recipient')
+            } catch (notifError) {
+              console.error('Warning: Failed to create notification:', notifError)
+              // Don't fail the payment if notification fails
+            }
             
             // Clear sessionStorage
             sessionStorage.removeItem('pendingCheckout')
