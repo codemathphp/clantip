@@ -258,8 +258,19 @@ Recipient has been notified
   // Format amount for sender: show USD amount sent + what recipient gets in their currency
   const formatSenderVoucherAmount = (voucher: any) => {
     try {
-      // Senders always send in USD
-      const senderAmount = voucher.originalAmount || 0
+      let senderAmount = voucher.originalAmount
+      
+      // If originalAmount is missing (old voucher), calculate from ZAR using exchange rate
+      if (!senderAmount && exchangeRates && exchangeRates['USD_TO_ZAR']) {
+        const zarAmount = voucher.amount / 100 // convert from subunits
+        const usdToZar = exchangeRates['USD_TO_ZAR']
+        senderAmount = zarAmount / usdToZar // convert ZAR back to USD
+      }
+      
+      // Fallback if still no amount
+      if (!senderAmount) {
+        senderAmount = 0
+      }
       
       // Recipient currency and what they'll receive
       const recipientCurrency = voucher.recipientCurrency || 'ZAR'
