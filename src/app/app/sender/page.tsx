@@ -296,6 +296,23 @@ Recipient has been notified
   const pendingAmount = vouchers.filter(v => v.status === 'delivered').reduce((sum, v) => sum + v.amount, 0)
   const redeemedAmount = vouchers.filter(v => v.status === 'paid').reduce((sum, v) => sum + v.amount, 0)
 
+  // Helper: calculate total in USD
+  const getTotalInUSD = (voucherList: Voucher[]) => {
+    return voucherList.reduce((total, v) => {
+      let usdAmount = v.originalAmount || 0
+      // If no originalAmount, derive from ZAR
+      if (!usdAmount && exchangeRates && exchangeRates['USD_TO_ZAR']) {
+        const zarAmount = v.amount / 100
+        usdAmount = zarAmount / exchangeRates['USD_TO_ZAR']
+      }
+      return total + usdAmount
+    }, 0)
+  }
+
+  const totalSentUSD = getTotalInUSD(vouchers)
+  const pendingAmountUSD = getTotalInUSD(vouchers.filter(v => v.status === 'delivered'))
+  const redeemedAmountUSD = getTotalInUSD(vouchers.filter(v => v.status === 'paid'))
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
@@ -460,21 +477,21 @@ Recipient has been notified
                   {balanceTab === 'sent' && (
                 <>
                   <p className="text-xs font-medium text-muted-foreground mb-2">Total Sent</p>
-                      <div className="text-4xl font-bold mb-2">{formatCurrency(totalSent)}</div>
+                      <div className="text-4xl font-bold mb-2">${Number(totalSentUSD).toFixed(2)}</div>
                   <p className="text-sm text-muted-foreground">{vouchers.length} gifts sent</p>
                 </>
               )}
               {balanceTab === 'pending' && (
                 <>
                   <p className="text-xs font-medium text-muted-foreground mb-2">Pending Redemption</p>
-                  <div className="text-4xl font-bold mb-2">{formatCurrency(pendingAmount)}</div>
+                  <div className="text-4xl font-bold mb-2">${Number(pendingAmountUSD).toFixed(2)}</div>
                   <p className="text-sm text-muted-foreground">Waiting to be redeemed</p>
                 </>
               )}
               {balanceTab === 'redeemed' && (
                 <>
                   <p className="text-xs font-medium text-muted-foreground mb-2">Successfully Redeemed</p>
-                  <div className="text-4xl font-bold mb-2">{formatCurrency(redeemedAmount)}</div>
+                  <div className="text-4xl font-bold mb-2">${Number(redeemedAmountUSD).toFixed(2)}</div>
                   <p className="text-sm text-muted-foreground">Completed redemptions</p>
                 </>
               )}
@@ -524,19 +541,23 @@ Recipient has been notified
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {vouchers.slice(0, 3).map((voucher) => (
-                    <div key={voucher.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm">{voucher.originalCurrency === 'USD' && typeof voucher.originalAmount === 'number' ? `$${Number(voucher.originalAmount).toFixed(2)}` : formatCurrency(voucher.amount)}</p>
-                        {voucher.message && (
-                          <p className="text-xs text-muted-foreground truncate">{voucher.message}</p>
-                        )}
+                  {vouchers.slice(0, 3).map((voucher) => {
+                    const formatted = formatSenderVoucherAmount(voucher)
+                    return (
+                      <div key={voucher.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">{formatted.mainAmount}</p>
+                          <p className="text-xs text-muted-foreground">{formatted.subtitle}</p>
+                          {voucher.message && (
+                            <p className="text-xs text-muted-foreground truncate">{voucher.message}</p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {voucher.status}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {voucher.status}
-                      </Badge>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -646,7 +667,7 @@ Recipient has been notified
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {voucher.amount} ZAR
+                      ${voucher.amount} USD
                     </p>
                   </div>
                   <Button
