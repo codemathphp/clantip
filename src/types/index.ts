@@ -52,6 +52,7 @@ export interface Voucher {
   amount: number // in ZAR cents
   originalAmount?: number // original amount in sender's currency (smallest unit)
   originalCurrency?: string // sender's original currency (e.g., 'USD')
+  recipientCurrency?: string // recipient's currency for display (e.g., 'NGN', 'GHS', 'KES', 'ZAR')
   message?: string
   status: VoucherStatus
   createdAt: Date

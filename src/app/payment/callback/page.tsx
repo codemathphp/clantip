@@ -55,6 +55,20 @@ export default function PaymentCallbackPage() {
             const paystackAmountKobo = result.data?.amount || null
             const amountToStore = paystackAmountKobo !== null ? paystackAmountKobo : Math.round((data.baseAmount || 0) * 100)
 
+            // Infer recipient currency from phone number
+            let recipientCurrency = 'ZAR' // default
+            if (data.recipientPhone) {
+              if (data.recipientPhone.startsWith('+234')) {
+                recipientCurrency = 'NGN'
+              } else if (data.recipientPhone.startsWith('+254')) {
+                recipientCurrency = 'KES'
+              } else if (data.recipientPhone.startsWith('+233')) {
+                recipientCurrency = 'GHS'
+              } else if (data.recipientPhone.startsWith('+27') || data.recipientPhone.startsWith('+263')) {
+                recipientCurrency = 'ZAR'
+              }
+            }
+
             await setDoc(voucherRef, {
               id: voucherId,
               code: voucherCode,
@@ -67,6 +81,8 @@ export default function PaymentCallbackPage() {
               // Preserve original payer currency and amount for correct display to sender
               originalAmount: data.baseAmount,
               originalCurrency: data.currency || 'USD',
+              // Store recipient's currency for display
+              recipientCurrency: recipientCurrency,
               status: 'delivered',
               message: data.message || '',
               paymentRef: reference,

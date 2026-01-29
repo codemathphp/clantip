@@ -298,17 +298,21 @@ Date: ${formatDate(voucher.createdAt)}
 
   const formatVoucherAmount = (voucher: any) => {
     try {
-      const target = voucher.originalCurrency || voucher.recipientCurrency || 'ZAR'
+      // For recipient: use recipientCurrency (if available), fallback to ZAR
+      const target = voucher.recipientCurrency || 'ZAR'
+      
       if (target === 'ZAR') {
-        // amount stored as subunits
+        // amount stored as ZAR subunits (cents)
         return formatCurrency(voucher.amount)
       }
 
+      // Convert ZAR to target currency
       const converted = convertZarToTarget(voucher.amount, target)
       if (converted === null) return formatCurrency(voucher.amount)
       const sym = getCurrencySymbol(target)
       return `${sym} ${Number(converted).toFixed(2)}`
     } catch (e) {
+      console.error('Format error:', e)
       return formatCurrency(voucher.amount)
     }
   }
@@ -589,7 +593,7 @@ Date: ${formatDate(voucher.createdAt)}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-3 border-b border-slate-100">
                       <span className="text-muted-foreground">Amount</span>
-                      <span className="font-semibold text-lg">{formatCurrency(selectedVoucher.amount)}</span>
+                      <span className="font-semibold text-lg">{formatVoucherAmount(selectedVoucher)}</span>
                     </div>
 
                     <div className="flex items-center justify-between py-3 border-b border-slate-100">
@@ -635,7 +639,7 @@ Date: ${formatDate(voucher.createdAt)}
                           💰 Redeem to Balance
                         </Button>
                         <p className="text-xs text-center text-muted-foreground">
-                          Adds {formatCurrency(selectedVoucher.amount)} to your available credits
+                          Adds {formatVoucherAmount(selectedVoucher)} to your available credits
                         </p>
                       </>
                     ) : selectedVoucher.status === 'redeemed' || selectedVoucher.status === 'paid' ? (
@@ -680,7 +684,7 @@ Date: ${formatDate(voucher.createdAt)}
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <div className="font-bold text-lg">{formatCurrency(voucher.amount)}</div>
+                              <div className="font-bold text-lg">{formatVoucherAmount(voucher)}</div>
                               <Badge className={voucher.status === 'redeemed' || voucher.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
                                 {voucher.status}
                               </Badge>
