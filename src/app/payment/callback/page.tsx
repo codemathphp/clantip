@@ -51,6 +51,10 @@ export default function PaymentCallbackPage() {
             const voucherCode = Math.floor(100000 + Math.random() * 900000).toString()
             const voucherRef = doc(db, 'vouchers', voucherId)
             
+            // Use Paystack-verified amount (kobo) as the stored voucher amount (ZAR subunits)
+            const paystackAmountKobo = result.data?.amount || null
+            const amountToStore = paystackAmountKobo !== null ? paystackAmountKobo : Math.round((data.baseAmount || 0) * 100)
+
             await setDoc(voucherRef, {
               id: voucherId,
               code: voucherCode,
@@ -58,7 +62,11 @@ export default function PaymentCallbackPage() {
               senderPhone: authUser.phoneNumber,
               recipientPhone: data.recipientPhone,
               recipientId: data.recipientPhone, // Use phone as ID for consistency
-              amount: data.baseAmount,
+              // `amount` stored as ZAR subunits (cents/kobo) so existing UI formatting works
+              amount: amountToStore,
+              // Preserve original payer currency and amount for correct display to sender
+              originalAmount: data.baseAmount,
+              originalCurrency: data.currency || 'USD',
               status: 'delivered',
               message: data.message || '',
               paymentRef: reference,

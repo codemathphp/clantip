@@ -361,10 +361,10 @@ Recipient has been notified
             </div>
 
             <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-6 text-center border border-slate-200/50">
-              {balanceTab === 'sent' && (
+                  {balanceTab === 'sent' && (
                 <>
                   <p className="text-xs font-medium text-muted-foreground mb-2">Total Sent</p>
-                  <div className="text-4xl font-bold mb-2">{formatCurrency(totalSent)}</div>
+                      <div className="text-4xl font-bold mb-2">{formatCurrency(totalSent)}</div>
                   <p className="text-sm text-muted-foreground">{vouchers.length} gifts sent</p>
                 </>
               )}
@@ -431,7 +431,7 @@ Recipient has been notified
                   {vouchers.slice(0, 3).map((voucher) => (
                     <div key={voucher.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
                       <div className="flex-1">
-                        <p className="font-semibold text-sm">{formatCurrency(voucher.amount)}</p>
+                        <p className="font-semibold text-sm">{voucher.originalCurrency === 'USD' && typeof voucher.originalAmount === 'number' ? `$${Number(voucher.originalAmount).toFixed(2)}` : formatCurrency(voucher.amount)}</p>
                         {voucher.message && (
                           <p className="text-xs text-muted-foreground truncate">{voucher.message}</p>
                         )}
