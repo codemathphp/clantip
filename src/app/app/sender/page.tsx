@@ -25,6 +25,7 @@ export default function SenderDashboard() {
   const [showDrawer, setShowDrawer] = useState(false)
   const [activeTab, setActiveTab] = useState<'home' | 'gift' | 'history' | 'store'>('home')
   const [balanceTab, setBalanceTab] = useState<'sent' | 'pending' | 'redeemed'>('sent')
+  const [exchangeRates, setExchangeRates] = useState<any>(null)
   const [storeVouchers] = useState<any[]>([
     { id: 1, name: 'Quick $10', amount: 10, popular: false },
     { id: 2, name: 'Popular $50', amount: 50, popular: true },
@@ -38,6 +39,23 @@ export default function SenderDashboard() {
     currency: 'USD',
     message: '',
   })
+
+  // Load exchange rates
+  useEffect(() => {
+    const loadRates = async () => {
+      try {
+        const res = await fetch('/api/admin/exchange-rates')
+        if (res.ok) {
+          const json = await res.json()
+          const rates = json.data?.rates || json?.rates || null
+          setExchangeRates(rates)
+        }
+      } catch (e) {
+        console.error('Failed to load exchange rates', e)
+      }
+    }
+    loadRates()
+  }, [])
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (authUser: any) => {
@@ -194,6 +212,74 @@ Recipient has been notified
         </div>
       </div>
     )
+  }
+
+  // Helper: convert ZAR to recipient currency
+  const convertZarToTarget = (zarSubunits: number, targetCurrency: string) => {
+    try {
+      if (!exchangeRates) return null
+      const amountZar = zarSubunits / 100
+
+      // Direct ZAR -> target
+      const directKey = `ZAR_TO_${targetCurrency}`
+      if (exchangeRates[directKey]) {
+        return amountZar * exchangeRates[directKey]
+      }
+
+      // Target is USD: use USD_TO_ZAR to invert
+      if (targetCurrency === 'USD' && exchangeRates['USD_TO_ZAR']) {
+        return amountZar / exchangeRates['USD_TO_ZAR']
+      }
+
+      // Fallback: via USD bridge
+      if (exchangeRates['USD_TO_ZAR'] && exchangeRates[`USD_TO_${targetCurrency}`]) {
+        const usdToZar = exchangeRates['USD_TO_ZAR']
+        const usdToTarget = exchangeRates[`USD_TO_${targetCurrency}`]
+        const rate = (1 / usdToZar) * usdToTarget
+        return amountZar * rate
+      }
+
+      return null
+    } catch (e) {
+      console.error('Conversion error', e)
+      return null
+    }
+  }
+
+  const getCurrencySymbol = (currency: string) => {
+    const found = SUPPORTED_COUNTRIES.find((c: any) => c.currency === currency)
+    if (found) return found.symbol
+    if (currency === 'ZWL' || currency === 'ZW') return 'Z$'
+    if (currency === 'USD') return '$'
+    return currency
+  }
+
+  // Format amount for sender: show original currency + what recipient gets
+  const formatSenderVoucherAmount = (voucher: any) => {
+    try {
+      // Original currency is what the sender sent
+      const senderCurrency = voucher.originalCurrency || 'USD'
+      const senderAmount = voucher.originalAmount || 0
+      const sym = getCurrencySymbol(senderCurrency)
+      
+      // Recipient currency and what they'll receive
+      const recipientCurrency = voucher.recipientCurrency || 'ZAR'
+      const recipientConverted = convertZarToTarget(voucher.amount, recipientCurrency)
+      const recipientSym = getCurrencySymbol(recipientCurrency)
+
+      return {
+        mainAmount: `${sym} ${Number(senderAmount).toFixed(2)}`,
+        subtitle: recipientConverted !== null 
+          ? `Recipient gets ${recipientSym} ${Number(recipientConverted).toFixed(2)} (${recipientCurrency})`
+          : `Recipient gets ${formatCurrency(voucher.amount)}`,
+      }
+    } catch (e) {
+      console.error('Format error:', e)
+      return {
+        mainAmount: `$${Number(voucher.originalAmount || 0).toFixed(2)}`,
+        subtitle: formatCurrency(voucher.amount),
+      }
+    }
   }
 
   const totalSent = vouchers.reduce((sum, v) => sum + v.amount, 0)
@@ -606,31 +692,35 @@ Recipient has been notified
               </div>
             ) : (
               <div className="space-y-2">
-                {vouchers.map((voucher) => (
-                  <div key={voucher.id} className="bg-white rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex-1">
-                        <p className="font-semibold">{formatCurrency(voucher.amount)}</p>
-                        <p className="text-xs text-muted-foreground font-mono">Code: {voucher.code}</p>
-                        {voucher.message && (
-                          <p className="text-sm text-muted-foreground">{voucher.message}</p>
-                        )}
+                {vouchers.map((voucher) => {
+                  const formatted = formatSenderVoucherAmount(voucher)
+                  return (
+                    <div key={voucher.id} className="bg-white rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex-1">
+                          <p className="font-semibold text-lg">{formatted.mainAmount}</p>
+                          <p className="text-xs text-muted-foreground">{formatted.subtitle}</p>
+                          <p className="text-xs text-muted-foreground font-mono mt-1">Code: {voucher.code}</p>
+                          {voucher.message && (
+                            <p className="text-sm text-muted-foreground mt-1">{voucher.message}</p>
+                          )}
+                        </div>
+                        <Badge variant="outline">{voucher.status}</Badge>
                       </div>
-                      <Badge variant="outline">{voucher.status}</Badge>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {new Date(voucher.createdAt).toLocaleDateString()}
+                      </p>
+                      <Button
+                        onClick={() => handleShareReceipt(voucher)}
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs h-8"
+                      >
+                        📤 Share Receipt
+                      </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-3">
-                      {new Date(voucher.createdAt).toLocaleDateString()}
-                    </p>
-                    <Button
-                      onClick={() => handleShareReceipt(voucher)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs h-8"
-                    >
-                      📤 Share Receipt
-                    </Button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

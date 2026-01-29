@@ -592,7 +592,7 @@ Date: ${formatDate(voucher.createdAt)}
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-3 border-b border-slate-100">
-                      <span className="text-muted-foreground">Amount</span>
+                      <span className="text-muted-foreground">Amount You Receive</span>
                       <span className="font-semibold text-lg">{formatVoucherAmount(selectedVoucher)}</span>
                     </div>
 
