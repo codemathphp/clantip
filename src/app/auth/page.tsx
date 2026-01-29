@@ -65,8 +65,14 @@ export default function AuthPage() {
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!phone || phone.length < 10) {
+    // Require international format to avoid incorrect local assumptions (e.g. Zimbabwe vs South Africa)
+    if (!phone || phone.length < 6) {
       toast.error('Please enter a valid phone number')
+      return
+    }
+
+    if (!phone.startsWith('+') && !phone.startsWith('00')) {
+      toast.error('Please include the country code, e.g. +27 or +263')
       return
     }
 
@@ -236,14 +242,14 @@ export default function AuthPage() {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+27 123 456 7890"
+                    placeholder="+27 71 234 5678 or +263 71 234 567"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={loading}
                     className="rounded-2xl border-slate-200/50"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Include your country code (e.g., +27 for South Africa)
+                    Include your country code (e.g., +27 for South Africa or +263 for Zimbabwe)
                   </p>
                 </div>
                 <Button
