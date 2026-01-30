@@ -59,7 +59,7 @@ export default function HelpPage() {
             </CardHeader>
             <CardContent className="space-y-2 text-muted-foreground">
               <ol className="list-decimal list-inside space-y-2">
-                <li>Purchase Credits using Paystack (secure payment)</li>
+                <li>Purchase Credits using Card Payment (secure payment)</li>
                 <li>Create a Support Voucher for a recipient by entering their phone number</li>
                 <li>Recipient receives instant notification</li>
                 <li>They see the credits in their wallet immediately</li>
@@ -87,7 +87,7 @@ export default function HelpPage() {
             <CardContent className="space-y-2 text-muted-foreground">
               <p>
                 Yes. Senders never see recipient bank details. All payments are processed securely
-                through Paystack, a trusted payment gateway. Your information is encrypted and
+                through Card Payment, a trusted payment gateway. Your information is encrypted and
                 protected.
               </p>
             </CardContent>

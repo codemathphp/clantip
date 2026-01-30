@@ -187,29 +187,28 @@ export default function RecipientDashboard() {
         const userEmail = user?.email || `user+${user?.phone}@clantip.com`
         const reference = `GIFT_${user?.phone}_${Date.now()}`
 
-        const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
+        // Initialize payment via server to avoid exposing secret keys
+        const initRes = await fetch('/api/payments/initialize', {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: userEmail,
-            amount: amountCents,
-            reference: reference,
-            metadata: {
-              type: 'gift',
-              senderPhone: user?.phone,
-              recipientPhone: giftForm.recipientPhone.replace(/\D/g, ''),
-              message: giftForm.message,
-            },
+            amount: baseAmount,
+            senderId: user?.phone || '',
+            recipientId: giftForm.recipientPhone.replace(/\D/g, ''),
+            recipientPhone: giftForm.recipientPhone.replace(/\D/g, ''),
+            message: giftForm.message,
+            currency: 'USD',
+            reference,
           }),
         })
 
-        const paystackData = await paystackRes.json()
-        if (!paystackData.status) {
-          throw new Error(paystackData.message || 'Failed to initialize payment')
+        const initJson = await initRes.json()
+        if (!initJson.success) {
+          throw new Error(initJson.error || 'Failed to initialize payment')
         }
+
+        const paystackData = initJson.data
 
         // Store gift info in sessionStorage for callback
         sessionStorage.setItem(
@@ -219,13 +218,13 @@ export default function RecipientDashboard() {
             amountCents: amountCents,
             recipientPhone: giftForm.recipientPhone.replace(/\D/g, ''),
             message: giftForm.message,
-            reference: paystackData.data.reference,
+            reference: paystackData.reference || reference,
             timestamp: Date.now(),
           })
         )
 
-        // Redirect to Paystack
-        window.location.href = paystackData.data.authorization_url
+        // Redirect to provider checkout (server returned authorization_url)
+        window.location.href = paystackData.authorization_url
         return
       }
 
@@ -804,7 +803,7 @@ Date: ${formatDate(voucher.createdAt)}
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-sm">Pay with Card</p>
-                      <p className="text-xs text-muted-foreground">Debit/Credit Card via Paystack</p>
+                      <p className="text-xs text-muted-foreground">Card Payment</p>
                     </div>
                     {giftPaymentMethod === 'checkout' && (
                       <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">

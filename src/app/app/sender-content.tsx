@@ -313,29 +313,27 @@ export default function SenderDashboard() {
       const amountCents = Math.round(parseFloat(topUpAmount) * 100)
       const userEmail = user?.email || `user+${user?.phone}@clantip.com`
 
-      // Initialize Paystack payment for wallet top-up
-      const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
+      // Initialize payment via server (keeps secret keys server-side)
+      const initRes = await fetch('/api/payments/initialize', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: userEmail,
-          amount: amountCents,
+          amount: parseFloat(topUpAmount),
+          senderId: user?.phone || '',
+          recipientId: user?.phone || '',
+          message: 'Wallet top-up',
+          currency: 'USD',
           reference: `WALLET_${user?.phone}_${Date.now()}`,
-          metadata: {
-            type: 'wallet_top_up',
-            userPhone: user?.phone,
-          },
         }),
       })
 
-      const paystackData = await paystackRes.json()
-
-      if (!paystackData.status) {
-        throw new Error(paystackData.message || 'Failed to initialize payment')
+      const initJson = await initRes.json()
+      if (!initJson.success) {
+        throw new Error(initJson.error || 'Failed to initialize payment')
       }
+
+      const paystackData = initJson.data
 
       // Store top-up info in sessionStorage for callback handling
       sessionStorage.setItem(
@@ -343,15 +341,13 @@ export default function SenderDashboard() {
         JSON.stringify({
           amount: parseFloat(topUpAmount),
           amountCents: amountCents,
-          reference: paystackData.data.reference,
+          reference: paystackData.reference,
           timestamp: Date.now(),
         })
       )
 
-      // Redirect to Paystack checkout with callback
-      const checkoutUrl = new URL(paystackData.data.authorization_url)
-      checkoutUrl.searchParams.set('callbackurl', `${window.location.origin}/app/top-up-callback`)
-      window.location.href = checkoutUrl.toString()
+      // Redirect to provider checkout URL returned by server
+      window.location.href = paystackData.authorization_url
     } catch (error: any) {
       console.error('Top-up error:', error)
       toast.error(error.message || 'Failed to initiate top-up')
@@ -893,7 +889,7 @@ Recipient has been notified
                             : 'border-slate-200/50 hover:border-primary/50'
                         }`}
                       >
-                        <p className="font-semibold text-sm">💳 Paystack</p>
+                        <p className="font-semibold text-sm">💳 Card Payment</p>
                         <p className="text-xs text-muted-foreground">New payment</p>
                       </button>
                     </div>
@@ -1070,7 +1066,7 @@ Recipient has been notified
                     {topUpLoading ? 'Processing...' : `Add $${topUpAmount || '0'} to Wallet`}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
-                    Securely processed by Paystack
+                    Securely processed by Card Payment
                   </p>
                 </div>
               </form>

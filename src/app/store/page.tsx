@@ -236,7 +236,7 @@ export default function StorePage() {
                 </div>
 
                 <div className="text-xs text-muted-foreground text-center space-y-1">
-                  <p>🔒 Secure payment via Paystack</p>
+                  <p>🔒 Secure payment via Card Payment</p>
                   <p>⚡ Recipient gets instant notification</p>
                 </div>
               </CardContent>
@@ -254,7 +254,7 @@ export default function StorePage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Secure checkout with Paystack. No hidden fees.
+                Secure checkout with Card Payment. No hidden fees.
               </p>
             </CardContent>
           </Card>
