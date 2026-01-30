@@ -4,7 +4,10 @@ export type UserStatus = 'active' | 'suspended' | 'deleted'
 
 export interface User {
   id: string
+  // E.164-format phone (preferred) and legacy `phone` field.
+  // `phone` is kept for compatibility and always present on the document (may be empty string if unknown).
   phone: string
+  phoneE164?: string
   fullName: string
   handle?: string // optional unique username/handle (e.g., @alice)
   email?: string

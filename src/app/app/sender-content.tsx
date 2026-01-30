@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore'
+import { ensureUserRecord } from '@/lib/userSync'
 import { User, Voucher, Wallet } from '@/types'
 import { formatCurrency, SUPPORTED_COUNTRIES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ export default function SenderDashboard() {
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [loading, setLoading] = useState(true)
   const [showDrawer, setShowDrawer] = useState(false)
+  const [needsPhone, setNeedsPhone] = useState(false)
   const [activeTab, setActiveTab] = useState<'home' | 'gift' | 'top-up' | 'history' | 'store'>('home')
   const [balanceTab, setBalanceTab] = useState<'sent' | 'pending' | 'redeemed'>('sent')
   const [exchangeRates, setExchangeRates] = useState<any>(null)
@@ -93,41 +95,44 @@ export default function SenderDashboard() {
   }, [searchParams])
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (authUser: any) => {
-      if (!authUser) {
-        router.push('/auth')
-        return
-      }
+    let unsubscribeVouchers: (() => void) | null = null
 
+    const setupData = async (authUser: any) => {
       try {
-        // Get phone from auth user
-        const phone = authUser.phoneNumber
-        if (!phone) {
-          console.error('No phone number in auth user')
-          return
-        }
+        const uid = authUser.uid
 
-        // Lookup user by phone (document ID)
-        const userRef = doc(db, 'users', phone)
+        const onboardPhone = sessionStorage.getItem('onboardPhone') || authUser.phoneNumber || undefined
+        const ensured = await ensureUserRecord(uid, onboardPhone as string | undefined)
+
+        // Load canonical users/{uid}
+        const userRef = doc(db, 'users', uid)
         const userSnap = await getDoc(userRef)
         if (userSnap.exists()) {
-          setUser(userSnap.data() as User)
+          const userData = userSnap.data() as User
+          setUser(userData)
 
-          // Lookup wallet by phone
-          const walletRef = doc(db, 'wallets', phone)
-          const walletSnap = await getDoc(walletRef)
-          if (walletSnap.exists()) {
-            setWallet(walletSnap.data() as Wallet)
+          const phone = userData.phoneE164 || ensured.phone || userData.phone || ''
+          if (!phone) {
+            setNeedsPhone(true)
+            toast('Add your mobile number to receive gifts', { icon: 'ℹ️' })
           }
 
-          const vouchersQuery = query(
-            collection(db, 'vouchers'),
-            where('senderId', '==', authUser.uid)
-          )
-          const vouchersSnap = await getDocs(vouchersQuery)
-          setVouchers(
-            vouchersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
-          )
+          if (phone) {
+            const walletRef = doc(db, 'wallets', phone)
+            const walletSnap = await getDoc(walletRef)
+            if (walletSnap.exists()) {
+              setWallet(walletSnap.data() as Wallet)
+            }
+
+            const vouchersQuery = query(
+              collection(db, 'vouchers'),
+              where('senderId', '==', uid)
+            )
+            const vouchersSnap = await getDocs(vouchersQuery)
+            setVouchers(
+              vouchersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
+            )
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error)
@@ -135,6 +140,14 @@ export default function SenderDashboard() {
       } finally {
         setLoading(false)
       }
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (authUser: any) => {
+      if (!authUser) {
+        router.push('/auth')
+        return
+      }
+      setupData(authUser)
     })
 
     return () => unsubscribe()
@@ -558,6 +571,17 @@ Recipient has been notified
           </div>
         </div>
       </header>
+
+      {needsPhone && (
+        <div className="max-w-2xl mx-auto px-4 py-2">
+          <div className="rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 flex items-center justify-between">
+            <div className="text-sm">Your account is missing a mobile number. Add it to receive gifts.</div>
+            <div>
+              <Button size="sm" onClick={() => router.push('/auth')}>Add Phone</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showDrawer && (
         <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowDrawer(false)}>

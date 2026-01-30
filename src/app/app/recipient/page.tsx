@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { collection, query, where, getDocs, doc, getDoc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore'
+import { ensureUserRecord } from '@/lib/userSync'
 import { User, Voucher, Wallet, Redemption } from '@/types'
 import { formatCurrency, SA_BANKS, SUPPORTED_COUNTRIES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ export default function RecipientDashboard() {
   const [redemptions, setRedemptions] = useState<Redemption[]>([])
   const [loading, setLoading] = useState(true)
   const [showDrawer, setShowDrawer] = useState(false)
+  const [needsPhone, setNeedsPhone] = useState(false)
   const [activeTab, setActiveTab] = useState<'home' | 'vouchers' | 'gift' | 'redeem' | 'history'>('home')
   const [balanceTab, setBalanceTab] = useState<'available' | 'pending' | 'received'>('received')
   const [paymentMethod, setPaymentMethod] = useState<'eft' | 'mobile_wallet' | null>(null)
@@ -67,51 +69,57 @@ export default function RecipientDashboard() {
 
     const setupData = async (authUser: any) => {
       try {
-        // Get phone from auth user
-        const phone = authUser.phoneNumber
-        if (!phone) {
-          console.error('No phone number in auth user')
-          setLoading(false)
-          return
-        }
+        const uid = authUser.uid
 
-        // Lookup user by phone (document ID)
-        const userRef = doc(db, 'users', phone)
+        // Try to ensure a canonical users/{uid} and get phoneE164 if available
+        const onboardPhone = sessionStorage.getItem('onboardPhone') || authUser.phoneNumber || undefined
+        const ensured = await ensureUserRecord(uid, onboardPhone as string | undefined)
+
+        // Load the canonical user document users/{uid}
+        const userRef = doc(db, 'users', uid)
         const userSnap = await getDoc(userRef)
         if (userSnap.exists()) {
-          setUser(userSnap.data() as User)
+          const userData = userSnap.data() as User
+          setUser(userData)
 
-          // Lookup wallet by phone
-          const walletRef = doc(db, 'wallets', phone)
-          const walletSnap = await getDoc(walletRef)
-          if (walletSnap.exists()) {
-            setWallet(walletSnap.data() as Wallet)
+          // Load wallet by phone if we have one
+          const phone = userData.phoneE164 || ensured.phone || userData.phone || ''
+          if (!phone) {
+            // No phone available for this account — show a non-blocking prompt to add one
+            setNeedsPhone(true)
+            toast('Add your mobile number to receive gifts', { icon: 'ℹ️' })
           }
 
-          // Set up REAL-TIME listener for vouchers so new gifts appear immediately
-          const vouchersQuery = query(
-            collection(db, 'vouchers'),
-            where('recipientId', '==', phone)
-          )
-          unsubscribeVouchers = onSnapshot(vouchersQuery, (snapshot) => {
-            const vouchersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
-            setVouchers(vouchersList)
-            console.log(`🔔 [Recipient] Updated ${vouchersList.length} vouchers in real-time`)
-          })
+          if (phone) {
+            const walletRef = doc(db, 'wallets', phone)
+            const walletSnap = await getDoc(walletRef)
+            if (walletSnap.exists()) {
+              setWallet(walletSnap.data() as Wallet)
+            }
+
+            // Set up REAL-TIME listener for vouchers using phone as recipientId
+            const vouchersQuery = query(
+              collection(db, 'vouchers'),
+              where('recipientId', '==', phone)
+            )
+            unsubscribeVouchers = onSnapshot(vouchersQuery, (snapshot) => {
+              const vouchersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
+              setVouchers(vouchersList)
+              console.log(`🔔 [Recipient] Updated ${vouchersList.length} vouchers in real-time`)
+            })
+          }
 
           const redemptionsQuery = query(
             collection(db, 'redemptions'),
-            where('userId', '==', authUser.uid)
+            where('userId', '==', uid)
           )
           const redemptionsSnap = await getDocs(redemptionsQuery)
           setRedemptions(
             redemptionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Redemption))
           )
-
-          setLoading(false)
-        } else {
-          setLoading(false)
         }
+
+        setLoading(false)
       } catch (error) {
         console.error('Error fetching data:', error)
         toast.error('Failed to load dashboard')
@@ -475,6 +483,17 @@ Date: ${formatDate(voucher.createdAt)}
           </div>
         </div>
       </header>
+
+      {needsPhone && (
+        <div className="max-w-2xl mx-auto px-4 py-2">
+          <div className="rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 flex items-center justify-between">
+            <div className="text-sm">Your account is missing a mobile number. Add it to receive gifts.</div>
+            <div>
+              <Button size="sm" onClick={() => router.push('/auth')}>Add Phone</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showDrawer && (
         <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowDrawer(false)}>
