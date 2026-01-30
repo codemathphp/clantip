@@ -721,6 +721,20 @@ Date: ${formatDate(voucher.createdAt)}
               )}
             </div>
 
+            {/* Share Your Link Card */}
+            <button
+              onClick={() => router.push('/app/receive')}
+              className="w-full mt-6 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-2xl p-6 border border-purple-200/50 hover:border-purple-300 hover:shadow-md transition text-left"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base mb-1">Share Your Link 💜</h3>
+                  <p className="text-sm text-muted-foreground">Let people send you gifts with your QR code</p>
+                </div>
+                <div className="flex-shrink-0 text-2xl">🎁</div>
+              </div>
+            </button>
+
             <div className="mt-8">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-semibold text-sm">Recent Vouchers</h2>

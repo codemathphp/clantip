@@ -127,7 +127,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [notifications])
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  const unreadCount = notifications.filter(n => n.read === false).length
 
   return (
     <NotificationContext.Provider

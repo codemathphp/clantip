@@ -825,6 +825,20 @@ Recipient has been notified
               </Button>
             </div>
 
+            {/* Receive Tips Card */}
+            <button
+              onClick={() => router.push('/app/receive')}
+              className="w-full mt-6 bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-2xl p-6 border border-green-200/50 hover:border-green-300 hover:shadow-md transition text-left"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base mb-1">Receive Tips 🎁</h3>
+                  <p className="text-sm text-muted-foreground">Share your QR code and get tipped instantly</p>
+                </div>
+                <div className="flex-shrink-0 text-2xl">💰</div>
+              </div>
+            </button>
+
             <div className="mt-8">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="font-semibold text-sm">Recent Gifts</h2>
