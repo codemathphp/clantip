@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore'
 import { User, Voucher, Wallet } from '@/types'
 import { formatCurrency, SUPPORTED_COUNTRIES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -20,6 +20,7 @@ export default function SenderDashboard() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
+  const [otherSideGiftsCount, setOtherSideGiftsCount] = useState<number>(0)
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [loading, setLoading] = useState(true)
@@ -138,6 +139,22 @@ export default function SenderDashboard() {
 
     return () => unsubscribe()
   }, [router])
+
+  // Listen for vouchers where this user is the recipient (gifts on the other side)
+  useEffect(() => {
+    if (!user?.phone) return
+    const q = query(
+      collection(db, 'vouchers'),
+      where('recipientId', '==', user.phone)
+    )
+    const unsub = onSnapshot(q, (snapshot) => {
+      setOtherSideGiftsCount(snapshot.size)
+    }, (err) => {
+      console.warn('Error listening for other-side vouchers', err)
+    })
+
+    return () => unsub()
+  }, [user])
 
   const handleGiftCredits = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -524,7 +541,14 @@ Recipient has been notified
             />
           </div>
           <div className="flex items-center gap-2">
-            <NotificationCenter />
+            <div className="relative">
+              <NotificationCenter />
+              {otherSideGiftsCount > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center h-5 min-w-[20px] px-1 rounded-full bg-red-600 text-white text-xs font-semibold">
+                  {otherSideGiftsCount}
+                </span>
+              )}
+            </div>
             <button
               onClick={() => setShowDrawer(!showDrawer)}
               className="p-2 hover:bg-slate-100 rounded-lg transition"
