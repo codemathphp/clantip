@@ -1,20 +1,19 @@
 {
   "name": "ClanTip - Digital Value Gifting",
   "short_name": "ClanTip",
-  "description": "Send support vouchers and gifts to loved ones across Africa. Redeem whenever you need it.",
   "start_url": "/",
   "scope": "/",
   "prefer_related_applications": false,
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#ffffff",
+  "background_color": "#F0F0E1",
   "theme_color": "#0d9488",
   "icons": [
     {
       "src": "/favicon.png",
-      "sizes": "192x192",
+      "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
     },
     {
       "src": "/favicon.png",
@@ -30,9 +29,9 @@
     },
     {
       "src": "/favicon.png",
-      "sizes": "512x512",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ],
   "categories": ["finance", "business"],
