@@ -700,6 +700,16 @@ Recipient has been notified
                 <Settings size={20} />
                 <span className="text-sm font-medium">Settings</span>
               </button>
+              <button
+                  onClick={() => {
+                    router.push('/app/icon-store')
+                    setShowDrawer(false)
+                  }}
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+              >
+                <span className="text-xl">💝</span>
+                <span className="text-sm font-medium">Love Store</span>
+              </button>
             </nav>
 
             <div className="absolute bottom-16 left-4 right-4">
@@ -851,14 +861,29 @@ Recipient has been notified
                 Custom Gift
               </Button>
               <Button
-                onClick={() => setActiveTab('store')}
+                onClick={() => router.push('/app/icon-store')}
                 variant="outline"
                 className="h-14 text-base"
               >
-                <ShoppingBag className="mr-2" size={20} />
-                Store
+                <span className="mr-2 text-xl">💝</span>
+                Love Store
               </Button>
             </div>
+
+            {/* Love Store Promo */}
+            <button
+              onClick={() => router.push('/app/icon-store')}
+              className="w-full mt-4 bg-gradient-to-r from-red-500/10 via-pink-500/10 to-red-500/10 rounded-2xl p-6 border border-red-200/50 hover:border-red-300 hover:shadow-md transition text-left group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="text-4xl group-hover:scale-110 transition">💝</div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-base mb-1">Impulse Love 💕</h3>
+                  <p className="text-sm text-muted-foreground">Send animated love with one tap • Preloaded balance only</p>
+                </div>
+                <div className="text-2xl">→</div>
+              </div>
+            </button>
 
             {/* Receive Tips Card */}
             <button
