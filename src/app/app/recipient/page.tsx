@@ -454,6 +454,78 @@ Date: ${formatDate(voucher.createdAt)}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
+        <div className="px-4 py-3 flex items-center justify-between max-w-2xl mx-auto">
+          <div className="relative w-32 h-10">
+            <Image
+              src="/clantip_logo.png"
+              alt="ClanTip Logo"
+              fill
+              className="object-contain"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <NotificationCenter />
+            <button
+              onClick={() => setShowDrawer(!showDrawer)}
+              className="p-2 hover:bg-slate-100 rounded-lg transition"
+            >
+              {showDrawer ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {showDrawer && (
+        <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowDrawer(false)}>
+          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg animate-in slide-in-from-left" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-slate-200/50 flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white font-bold">
+                  {user?.fullName?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{user?.fullName}</p>
+                  <p className="text-xs text-muted-foreground">{user?.phone}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowDrawer(false)} className="p-1 hover:bg-slate-100 rounded">
+                <X size={20} />
+              </button>
+            </div>
+
+            <nav className="p-4 space-y-2">
+              <button
+                onClick={() => {
+                  setActiveTab('home')
+                  setShowDrawer(false)
+                }}
+                className="w-full text-left p-3 rounded-lg hover:bg-slate-50"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('vouchers')
+                  setShowDrawer(false)
+                }}
+                className="w-full text-left p-3 rounded-lg hover:bg-slate-50"
+              >
+                Vouchers
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('gift')
+                  setShowDrawer(false)
+                }}
+                className="w-full text-left p-3 rounded-lg hover:bg-slate-50"
+              >
+                Send Gift
+              </button>
+            </nav>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-2xl mx-auto px-4 pb-24 pt-4">
         {activeTab === 'home' && (
