@@ -1155,6 +1155,18 @@ Recipient has been notified
             <History size={24} />
             <span className="text-xs font-medium">History</span>
           </button>
+          <button
+            onClick={() => router.push('/app/recipient')}
+            className="flex-1 py-3 flex flex-col items-center gap-1 transition text-muted-foreground hover:text-primary whitespace-nowrap"
+            title="Switch to Recipient"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="8" y1="6" x2="4" y2="6"></line>
+              <polyline points="4 12 8 8 8 16"></polyline>
+              <line x1="16" y1="18" x2="20" y2="18"></line>
+              <polyline points="20 12 16 16 16 8"></polyline>
+            </svg>
+          </button>
         </div>
       </nav>
     </div>
