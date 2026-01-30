@@ -169,7 +169,7 @@ export default function GiftPreviewPage() {
               {voucher.message && (
                 <div className="py-3 border-b border-slate-100">
                   <p className="text-muted-foreground mb-2">Message from Sender</p>
-                  <p className="italic text-foreground">"{voucher.message}"</p>
+                  <p className="italic text-foreground">&ldquo;{voucher.message}&rdquo;</p>
                 </div>
               )}
 
@@ -184,7 +184,7 @@ export default function GiftPreviewPage() {
             {/* Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-8">
               <p className="text-sm text-blue-900">
-                <span className="font-semibold">💡 What's Next?</span> Sign in or create a ClanTip account to claim your gift and start sending love to others!
+                <span className="font-semibold">💡 What&apos;s Next?</span> Sign in or create a ClanTip account to claim your gift and start sending love to others!
               </p>
             </div>
 
