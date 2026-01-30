@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { NotificationCenter } from '@/components/NotificationCenter'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
-import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, Wallet as WalletIcon } from 'lucide-react'
+import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, Wallet as WalletIcon, ArrowRightLeft } from 'lucide-react'
 
 export default function RecipientDashboard() {
   const router = useRouter()
@@ -1304,12 +1304,7 @@ Date: ${formatDate(voucher.createdAt)}
             className="flex-1 py-3 flex flex-col items-center gap-1 transition text-muted-foreground hover:text-primary"
             title="Switch to Sender"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="8" y1="6" x2="4" y2="6"></line>
-              <polyline points="4 12 8 8 8 16"></polyline>
-              <line x1="16" y1="18" x2="20" y2="18"></line>
-              <polyline points="20 12 16 16 16 8"></polyline>
-            </svg>
+            <ArrowRightLeft size={28} />
           </button>
         </div>
       </nav>
