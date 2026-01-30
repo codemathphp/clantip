@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/firebase/config'
-import { doc, getDoc, updateDoc, writeBatch, Timestamp } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, writeBatch, Timestamp, collection } from 'firebase/firestore'
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,6 +62,25 @@ export async function POST(request: NextRequest) {
         pendingCredits: 0,
         updatedAt: Timestamp.now(),
       })
+    }
+
+    // Create notification for the sender so they know the voucher was redeemed
+    try {
+      const senderId = voucher.senderId
+      if (senderId) {
+        const notificationRef = doc(collection(db, 'notifications'))
+        batch.set(notificationRef, {
+          userId: senderId,
+          title: 'Gift Redeemed',
+          body: `Your gift to ${voucher.recipientHandle || voucher.recipientId} worth R${(voucher.amount || 0).toFixed(2)} was redeemed`,
+          read: false,
+          type: 'voucher',
+          relatedId: voucherId,
+          createdAt: Timestamp.now(),
+        })
+      }
+    } catch (e) {
+      console.warn('Failed to enqueue sender notification on redeem', e)
     }
 
     await batch.commit()

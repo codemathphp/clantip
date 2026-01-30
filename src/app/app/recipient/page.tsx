@@ -617,7 +617,7 @@ Date: ${formatDate(voucher.createdAt)}
                   router.push('/app/receive')
                   setShowDrawer(false)
                 }}
-                className="w-full flex flex-col items-center gap-2 px-4 py-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition text-white font-semibold"
+                className="w-full flex flex-col items-center gap-2 px-4 py-4 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 transition text-white font-semibold"
               >
                 <QrCode size={32} />
                 <span className="text-sm">My Tip Code</span>
@@ -714,39 +714,15 @@ Date: ${formatDate(voucher.createdAt)}
                 <Gift className="mr-2" size={20} />
                 View Gifts
               </Button>
-              {((user?.senderBalance || 0) > 0 || (wallet?.availableCredits || 0) > 0) ? (
-                <Button
-                  onClick={() => setActiveTab('gift')}
-                  variant="outline"
-                  className="h-14 text-base"
-                >
-                  💝 Send Gift
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => setActiveTab('redeem')}
-                  variant="outline"
-                  className="h-14 text-base"
-                >
-                  <WalletIcon className="mr-2" size={20} />
-                  Redeem
-                </Button>
-              )}
+              <Button
+                onClick={() => setActiveTab('redeem')}
+                variant="outline"
+                className="h-14 text-base"
+              >
+                <WalletIcon className="mr-2" size={20} />
+                Redeem
+              </Button>
             </div>
-
-            {/* Share Your Link Card */}
-            <button
-              onClick={() => router.push('/app/receive')}
-              className="w-full mt-6 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-2xl p-6 border border-purple-200/50 hover:border-purple-300 hover:shadow-md transition text-left"
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-base mb-1">Share Your Link 💜</h3>
-                  <p className="text-sm text-muted-foreground">Let people send you gifts with your QR code</p>
-                </div>
-                <div className="flex-shrink-0 text-2xl">🎁</div>
-              </div>
-            </button>
 
             <div className="mt-8">
               <div className="flex items-center justify-between mb-3">

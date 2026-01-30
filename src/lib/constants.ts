@@ -33,9 +33,9 @@ export const SA_BANKS = [
 
 // Status display mappings
 export const STATUS_DISPLAY: Record<string, { label: string; color: string }> = {
-  delivered: { label: 'Delivered', color: 'bg-blue-100 text-blue-800' },
+  delivered: { label: 'Delivered', color: 'bg-orange-100 text-orange-800' },
   redemption_requested: { label: 'Redemption Requested', color: 'bg-yellow-100 text-yellow-800' },
-  processing: { label: 'Processing', color: 'bg-purple-100 text-purple-800' },
+  processing: { label: 'Processing', color: 'bg-teal-100 text-teal-800' },
   approved: { label: 'Approved', color: 'bg-green-100 text-green-800' },
   paid: { label: 'Paid', color: 'bg-green-100 text-green-800' },
   failed: { label: 'Failed', color: 'bg-red-100 text-red-800' },
