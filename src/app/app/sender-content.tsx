@@ -8,6 +8,8 @@ import { collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc, onSn
 import { ensureUserRecord } from '@/lib/userSync'
 import { User, Voucher, Wallet } from '@/types'
 import { formatCurrency, SUPPORTED_COUNTRIES } from '@/lib/constants'
+import { usePwaPrompt } from '@/lib/usePwaPrompt'
+import { createNotification } from '@/lib/createNotification'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -28,6 +30,7 @@ export default function SenderDashboard() {
   const [showDrawer, setShowDrawer] = useState(false)
   const [needsPhone, setNeedsPhone] = useState(false)
   const [activeTab, setActiveTab] = useState<'home' | 'gift' | 'top-up' | 'history' | 'store'>('home')
+  const { showPrompt: showPwaPrompt, handleInstall: handlePwaInstall, handleDismiss: handlePwaDismiss } = usePwaPrompt()
   const [balanceTab, setBalanceTab] = useState<'sent' | 'pending' | 'redeemed'>('sent')
   const [exchangeRates, setExchangeRates] = useState<any>(null)
   const [paymentMethod, setPaymentMethod] = useState<'balance' | 'checkout' | null>(null)
@@ -288,7 +291,28 @@ export default function SenderDashboard() {
           }),
         ])
 
-        toast.success(`Gift sent! Recipient: ${resolvedHandle || resolvedPhone}`)
+        // Create notification for the recipient
+        try {
+          // Get recipient's uid if possible
+          const recipientDocRef = doc(db, 'users', resolvedPhone)
+          const recipientSnap = await getDoc(recipientDocRef)
+          let recipientUid = resolvedPhone
+          if (recipientSnap.exists()) {
+            recipientUid = (recipientSnap.data() as any).id || recipientSnap.data()?.authUid || resolvedPhone
+          }
+          
+          await createNotification(
+            recipientUid,
+            `🎁 You received a gift from ${user?.fullName || 'ClanTip'}!`,
+            `${user?.fullName || 'Someone'} sent you ${formatCurrency(amountCents)}. ${giftForm.message ? `"${giftForm.message}"` : 'Open the app to see more!'}`,
+            'voucher',
+            voucherRef.id
+          )
+        } catch (e) {
+          console.warn('Failed to create gift notification', e)
+        }
+
+        toast.success(`✅ Gift sent to ${resolvedHandle || resolvedPhone}! They've been notified. 🎉`)
         setGiftForm({ recipientPhone: '', recipientCountry: 'ZA', amount: '', message: '' })
         setPaymentMethod(null)
         setUser((prev) => prev ? { ...prev, senderBalance: newSenderBalance } : null)
@@ -578,6 +602,18 @@ Recipient has been notified
             <div className="text-sm">Your account is missing a mobile number. Add it to receive gifts.</div>
             <div>
               <Button size="sm" onClick={() => router.push('/auth')}>Add Phone</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPwaPrompt && (
+        <div className="max-w-2xl mx-auto px-4 py-2">
+          <div className="rounded-md bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 flex items-center justify-between">
+            <div className="text-sm">Install ClanTip on your device for quick access and offline support.</div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handlePwaInstall} className="rounded-md bg-blue-600 hover:bg-blue-700">Install</Button>
+              <Button size="sm" variant="outline" onClick={handlePwaDismiss} className="rounded-md">Later</Button>
             </div>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, setDoc, collection } from 'firebase/firestore'
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
 import { CheckCircle, XCircle, Loader } from 'lucide-react'
@@ -78,16 +78,8 @@ function TopUpCallbackContent() {
               return
             }
 
-            // Get user phone
-            const userPhone = authUser.phoneNumber
-            if (!userPhone) {
-              setStatus('failed')
-              setMessage('Phone number not found in your profile')
-              return
-            }
-
-            // Update user senderBalance
-            const userRef = doc(db, 'users', userPhone)
+            // Get user from canonical users/{uid} and get their phone
+            const userRef = doc(db, 'users', authUser.uid)
             const userSnap = await getDoc(userRef)
 
             if (!userSnap.exists()) {
@@ -96,25 +88,56 @@ function TopUpCallbackContent() {
               return
             }
 
-            const currentBalance = (userSnap.data()?.senderBalance || 0) as number
+            const userData = userSnap.data() as any
+            const userPhone = userData.phone || userData.phoneE164
+            const currentBalance = (userData.senderBalance || 0) as number
             const newBalance = currentBalance + amountCents
 
-            // Update Firestore
+            // Update canonical user doc (users/{uid})
             await updateDoc(userRef, {
               senderBalance: newBalance,
               updatedAt: new Date(),
             })
 
+            // Also update legacy users/{phone} doc for backward compatibility if phone exists
+            if (userPhone) {
+              try {
+                const legacyUserRef = doc(db, 'users', userPhone)
+                await updateDoc(legacyUserRef, {
+                  senderBalance: newBalance,
+                  updatedAt: new Date(),
+                })
+              } catch (e) {
+                console.warn('Failed to update legacy user doc', e)
+              }
+            }
+
+            // Create a notification for the top-up
+            try {
+              const notificationRef = doc(collection(db, 'notifications'))
+              await setDoc(notificationRef, {
+                userId: authUser.uid,
+                title: '💰 Wallet Topped Up',
+                body: `You added $${(amountCents / 100).toFixed(2)} to your wallet. Ready to send some Love across the world! 🌍`,
+                read: false,
+                type: 'payment',
+                relatedId: topUpData.reference,
+                createdAt: new Date(),
+              })
+            } catch (e) {
+              console.warn('Failed to create notification', e)
+            }
+
             // Clear pending top-up from sessionStorage
             sessionStorage.removeItem('pendingTopUp')
 
             setStatus('success')
-            setMessage(`✅ Wallet topped up! You now have $${(newBalance / 100).toFixed(2)}`)
+            setMessage(`✅ Wallet topped up! You now have $${(newBalance / 100).toFixed(2)}\n💝 Ready to send some Love across the world!`)
 
-            // Redirect after 2 seconds
+            // Redirect after 3 seconds
             setTimeout(() => {
-              router.push('/app/sender?tab=top-up')
-            }, 2000)
+              router.push('/app/sender?tab=home')
+            }, 3000)
           } catch (err: any) {
             console.error('Verification error:', err)
             setStatus('failed')
