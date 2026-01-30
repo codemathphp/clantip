@@ -506,7 +506,7 @@ Date: ${formatDate(voucher.createdAt)}
                 <span className="text-sm font-medium">Receive Credits</span>
               </button>
               <button
-                onClick={() => router.push('/app/sender-content')}
+                onClick={() => router.push('/app/sender')}
                 className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
               >
                 <Home size={20} />
@@ -1300,7 +1300,7 @@ Date: ${formatDate(voucher.createdAt)}
             <span className="text-xs font-medium">History</span>
           </button>
           <button
-            onClick={() => router.push('/app/sender-content')}
+            onClick={() => router.push('/app/sender')}
             className="flex-1 py-3 flex flex-col items-center gap-1 transition text-muted-foreground hover:text-primary"
             title="Switch to Sender"
           >
