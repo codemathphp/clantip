@@ -19,10 +19,7 @@ export default function SplashPage() {
       style={{
         height: '100vh',
         width: '100vw',
-        backgroundImage: "url('/splash-bg.png')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#F0F0E1',
       }}
     />
   )
