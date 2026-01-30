@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label'
 import { NotificationCenter } from '@/components/NotificationCenter'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
-import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, ShoppingBag, Wallet as WalletIcon, ArrowRightLeft } from 'lucide-react'
+import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, ShoppingBag, Wallet as WalletIcon, ArrowRightLeft, QrCode } from 'lucide-react'
 
 export default function SenderDashboard() {
   const router = useRouter()
@@ -303,8 +303,8 @@ export default function SenderDashboard() {
           
           await createNotification(
             recipientUid,
-            `🎁 You received a gift from ${user?.fullName || 'ClanTip'}!`,
-            `${user?.fullName || 'Someone'} sent you ${formatCurrency(amountCents)}. ${giftForm.message ? `"${giftForm.message}"` : 'Open the app to see more!'}`,
+            `💰 You received a TIP! ${formatCurrency(amountCents)}`,
+            `${user?.fullName || 'Someone'} tipped you. ${giftForm.message ? `Message: "${giftForm.message}"` : 'Check it out!'}`,
             'voucher',
             voucherRef.id
           )
@@ -699,6 +699,19 @@ Recipient has been notified
                 <span className="text-sm font-medium">Settings</span>
               </button>
             </nav>
+
+            <div className="absolute bottom-16 left-4 right-4">
+              <button
+                onClick={() => {
+                  router.push('/app/receive')
+                  setShowDrawer(false)
+                }}
+                className="w-full flex flex-col items-center gap-2 px-4 py-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition text-white font-semibold"
+              >
+                <QrCode size={32} />
+                <span className="text-sm">Scan To Tip</span>
+              </button>
+            </div>
 
             <div className="absolute bottom-4 left-4 right-4">
               <Button
