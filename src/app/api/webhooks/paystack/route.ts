@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/firebase/config'
-import { doc, updateDoc, getDoc, collection, writeBatch, Timestamp } from 'firebase/firestore'
+import { doc, updateDoc, getDoc, collection, writeBatch, Timestamp, query, getDocs, where } from 'firebase/firestore'
 import { verifyPaystackSignature, verifyTransaction } from '@/lib/paystack'
 import crypto from 'crypto-js'
 
@@ -97,6 +97,7 @@ async function handleChargeSuccess(data: any) {
       senderId: metadata?.senderId,
       recipientId: metadata?.recipientId,
       amount: convertedAmount, // Store in ZAR (as decimal, NOT kobo)
+      recipientHandle: metadata?.recipientHandle || null,
       originalAmount,
       originalCurrency,
       message: metadata?.message || '',
@@ -108,10 +109,27 @@ async function handleChargeSuccess(data: any) {
     // Vouchers are NOT automatically credited to wallet
     // Recipients must explicitly redeem them via /api/vouchers/redeem
 
-    // Get recipient's UID from user doc (recipientId is phone, need UID for notifications)
-    const recipientUserRef = doc(db, 'users', metadata?.recipientId)
-    const recipientUserSnap = await getDoc(recipientUserRef)
-    const recipientUID = recipientUserSnap.exists() ? recipientUserSnap.data().id : metadata?.recipientId
+    // Resolve recipient UID: prefer lookup by phone (recipientId), fallback to handle if provided
+    let recipientUID = metadata?.recipientId
+    try {
+      const recipientUserRef = doc(db, 'users', metadata?.recipientId)
+      const recipientUserSnap = await getDoc(recipientUserRef)
+      if (recipientUserSnap.exists()) {
+        recipientUID = recipientUserSnap.data().id
+      } else if (metadata?.recipientHandle) {
+        // Try to resolve by handle
+        const usersColl = collection(db, 'users')
+        const q = query(usersColl, where('handle', '==', metadata.recipientHandle))
+        const qSnap = await getDocs(q)
+        if (!qSnap.empty) {
+          const u = qSnap.docs[0].data()
+          recipientUID = u.id || u.phone || metadata.recipientId
+        }
+      }
+    } catch (e) {
+      console.warn('Recipient resolution warning', e)
+      recipientUID = metadata?.recipientId
+    }
 
     // Create notifications
     const notificationRef1 = doc(collection(db, 'notifications'))

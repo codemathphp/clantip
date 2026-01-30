@@ -6,6 +6,7 @@ export interface User {
   id: string
   phone: string
   fullName: string
+  handle?: string // optional unique username/handle (e.g., @alice)
   email?: string
   role: UserRole
   status: UserStatus
@@ -15,6 +16,10 @@ export interface User {
     monthlyLimit?: number
     dailyLimit?: number
   }
+  phoneCountry?: string // country code of phone number
+  baseCountry?: string // current country the user is in (for base currency)
+  baseCurrency?: string // current base currency (ZAR, NGN, GHS, KES, etc.)
+  senderBalance?: number // preloaded wallet balance in USD cents (for quick tipping)
 }
 
 // Wallet types
@@ -53,6 +58,7 @@ export interface Voucher {
   originalAmount?: number // original amount in sender's currency (smallest unit)
   originalCurrency?: string // sender's original currency (e.g., 'USD')
   recipientCurrency?: string // recipient's currency for display (e.g., 'NGN', 'GHS', 'KES', 'ZAR')
+  recipientHandle?: string // optional recipient handle/username
   message?: string
   status: VoucherStatus
   createdAt: Date

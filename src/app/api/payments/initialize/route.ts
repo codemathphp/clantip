@@ -43,7 +43,7 @@ async function getExchangeRates() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, amount, senderId, recipientId, recipientPhone, message, currency = 'USD' } = await request.json()
+    const { email, amount, senderId, recipientId, recipientPhone, recipientHandle, message, currency = 'USD' } = await request.json()
 
     if (!email || !amount || !senderId || !recipientId) {
       return NextResponse.json(
@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
         senderId,
         recipientId,
         recipientPhone,
+        recipientHandle,
         message,
         originalAmount: amount,
         originalCurrency: currency,

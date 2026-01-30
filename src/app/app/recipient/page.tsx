@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { collection, query, where, getDocs, doc, getDoc, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore'
 import { User, Voucher, Wallet, Redemption } from '@/types'
 import { formatCurrency, SA_BANKS, SUPPORTED_COUNTRIES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,7 @@ export default function RecipientDashboard() {
   const [redemptions, setRedemptions] = useState<Redemption[]>([])
   const [loading, setLoading] = useState(true)
   const [showDrawer, setShowDrawer] = useState(false)
-  const [activeTab, setActiveTab] = useState<'home' | 'vouchers' | 'redeem' | 'history'>('home')
+  const [activeTab, setActiveTab] = useState<'home' | 'vouchers' | 'gift' | 'redeem' | 'history'>('home')
   const [balanceTab, setBalanceTab] = useState<'available' | 'pending' | 'received'>('received')
   const [paymentMethod, setPaymentMethod] = useState<'eft' | 'mobile_wallet' | null>(null)
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null)
@@ -36,6 +36,14 @@ export default function RecipientDashboard() {
     amount: '',
   })
   const [exchangeRates, setExchangeRates] = useState<any>(null)
+  const [giftForm, setGiftForm] = useState({
+    recipientPhone: '',
+    recipientCountry: 'ZA',
+    amount: '',
+    message: '',
+  })
+  const [giftPaymentMethod, setGiftPaymentMethod] = useState<'sender-balance' | 'available-credits' | 'checkout' | null>(null)
+  const [giftLoading, setGiftLoading] = useState(false)
 
   useEffect(() => {
     // Load exchange rates for converting ZAR -> recipient currency
@@ -148,7 +156,7 @@ export default function RecipientDashboard() {
         setSelectedVoucher({ ...selectedVoucher, status: 'redeemed' })
       }
       
-      // Refresh wallet
+      // Refresh wallet (availableCredits updated server-side)
       if (user?.phone) {
         const walletRef = doc(db, 'wallets', user.phone)
         const walletSnap = await getDoc(walletRef)
@@ -159,6 +167,142 @@ export default function RecipientDashboard() {
     } catch (error: any) {
       console.error('Redeem voucher error:', error)
       toast.error(error.message || 'Failed to redeem voucher')
+    }
+  }
+
+  const handleSendGift = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!giftForm.recipientPhone || !giftForm.amount || !giftPaymentMethod) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    setGiftLoading(true)
+    try {
+      const baseAmount = parseFloat(giftForm.amount)
+      const amountCents = Math.round(baseAmount * 100)
+      
+      // If using checkout, redirect to Paystack
+      if (giftPaymentMethod === 'checkout') {
+        const userEmail = user?.email || `user+${user?.phone}@clantip.com`
+        const reference = `GIFT_${user?.phone}_${Date.now()}`
+
+        const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            amount: amountCents,
+            reference: reference,
+            metadata: {
+              type: 'gift',
+              senderPhone: user?.phone,
+              recipientPhone: giftForm.recipientPhone.replace(/\D/g, ''),
+              message: giftForm.message,
+            },
+          }),
+        })
+
+        const paystackData = await paystackRes.json()
+        if (!paystackData.status) {
+          throw new Error(paystackData.message || 'Failed to initialize payment')
+        }
+
+        // Store gift info in sessionStorage for callback
+        sessionStorage.setItem(
+          'pendingGift',
+          JSON.stringify({
+            amount: baseAmount,
+            amountCents: amountCents,
+            recipientPhone: giftForm.recipientPhone.replace(/\D/g, ''),
+            message: giftForm.message,
+            reference: paystackData.data.reference,
+            timestamp: Date.now(),
+          })
+        )
+
+        // Redirect to Paystack
+        window.location.href = paystackData.data.authorization_url
+        return
+      }
+
+      // If using balance, deduct from balance
+      const balance = giftPaymentMethod === 'sender-balance' 
+        ? (user?.senderBalance || 0)
+        : (wallet?.availableCredits || 0)
+
+      if (balance < amountCents) {
+        const balanceName = giftPaymentMethod === 'sender-balance' ? 'Sender Balance' : 'Available Credits'
+        toast.error(`Insufficient ${balanceName}. You have $${(balance / 100).toFixed(2)}`)
+        setGiftLoading(false)
+        return
+      }
+
+      const resolvedPhone = giftForm.recipientPhone.replace(/\D/g, '')
+      const formattedUserPhone = user?.phone?.replace(/\D/g, '') || ''
+
+      if (resolvedPhone === formattedUserPhone) {
+        toast.error('You cannot send credits to yourself')
+        setGiftLoading(false)
+        return
+      }
+
+      // Generate voucher code
+      const voucherCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+
+      // Create voucher document
+      const voucherRef = doc(collection(db, 'vouchers'))
+      const voucherData = {
+        id: voucherRef.id,
+        code: voucherCode,
+        senderId: user?.phone || '',
+        recipientId: resolvedPhone,
+        amount: amountCents,
+        recipientCurrency: 'ZAR',
+        status: 'delivered',
+        message: giftForm.message || '',
+        paymentMethod: giftPaymentMethod === 'sender-balance' ? 'balance' : 'redeemed',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+
+      // Update balance and create voucher
+      const userRef = doc(db, 'users', user?.phone || '')
+      const newBalance = balance - amountCents
+
+      if (giftPaymentMethod === 'sender-balance') {
+        // Deduct from senderBalance
+        await Promise.all([
+          setDoc(voucherRef, voucherData),
+          updateDoc(userRef, {
+            senderBalance: newBalance,
+            updatedAt: new Date(),
+          }),
+        ])
+        setUser((prev) => prev ? { ...prev, senderBalance: newBalance } : null)
+      } else {
+        // Deduct from availableCredits (wallet)
+        const walletRef = doc(db, 'wallets', user?.phone || '')
+        await Promise.all([
+          setDoc(voucherRef, voucherData),
+          updateDoc(walletRef, {
+            availableCredits: newBalance,
+            updatedAt: new Date(),
+          }),
+        ])
+        setWallet((prev) => prev ? { ...prev, availableCredits: newBalance } : null)
+      }
+
+      toast.success('Gift sent!')
+      setGiftForm({ recipientPhone: '', recipientCountry: 'ZA', amount: '', message: '' })
+      setGiftPaymentMethod(null)
+    } catch (error: any) {
+      console.error('Send gift error:', error)
+      toast.error(error.message || 'Failed to send gift')
+      setGiftLoading(false)
     }
   }
 
@@ -290,151 +434,27 @@ Date: ${formatDate(voucher.createdAt)}
   const getCurrencySymbol = (currency: string) => {
     const found = SUPPORTED_COUNTRIES.find((c: any) => c.currency === currency)
     if (found) return found.symbol
-    // Add Zimbabwe mapping if needed
     if (currency === 'ZWL' || currency === 'ZW') return 'Z$'
     if (currency === 'USD') return '$'
     return currency
   }
 
-  const formatVoucherAmount = (voucher: any) => {
+  const formatVoucherAmount = (voucher: Voucher | null) => {
+    if (!voucher) return ''
     try {
-      // For recipient: use recipientCurrency (if available), fallback to ZAR
-      const target = voucher.recipientCurrency || 'ZAR'
-      
-      if (target === 'ZAR') {
-        // amount stored as ZAR subunits (cents)
-        return formatCurrency(voucher.amount)
-      }
-
-      // Convert ZAR to target currency
-      const converted = convertZarToTarget(voucher.amount, target)
+      const recipientCurrency = voucher.recipientCurrency || user?.baseCurrency || 'ZAR'
+      const converted = convertZarToTarget(voucher.amount, recipientCurrency)
+      const sym = getCurrencySymbol(recipientCurrency)
       if (converted === null) return formatCurrency(voucher.amount)
-      const sym = getCurrencySymbol(target)
       return `${sym} ${Number(converted).toFixed(2)}`
     } catch (e) {
-      console.error('Format error:', e)
+      console.error('formatVoucherAmount error', e)
       return formatCurrency(voucher.amount)
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
-        <div className="px-4 py-3 flex items-center justify-between max-w-2xl mx-auto">
-          <div className="relative w-32 h-10">
-            <Image
-              src="/clantip_logo.png"
-              alt="ClanTip Logo"
-              fill
-              className="object-contain"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationCenter />
-            <button
-              onClick={() => setShowDrawer(!showDrawer)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition"
-            >
-              {showDrawer ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {showDrawer && (
-        <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowDrawer(false)}>
-          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg animate-in slide-in-from-left" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b border-slate-200/50 flex items-center justify-between">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white font-bold">
-                  {user?.fullName?.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">{user?.fullName}</p>
-                  <p className="text-xs text-muted-foreground">{user?.phone}</p>
-                </div>
-              </div>
-              <button onClick={() => setShowDrawer(false)} className="p-1 hover:bg-slate-100 rounded">
-                <X size={20} />
-              </button>
-            </div>
-
-            <nav className="p-4 space-y-2">
-              <button
-                onClick={() => {
-                  setActiveTab('home')
-                  setShowDrawer(false)
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left bg-slate-50 border border-slate-200"
-              >
-                <Gift size={20} />
-                <span className="text-sm font-medium">Receive Credits</span>
-              </button>
-              <button
-                onClick={() => router.push('/app/sender')}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
-              >
-                <Home size={20} />
-                <span className="text-sm font-medium">Send Credits</span>
-              </button>
-
-              <div className="my-3 border-t border-slate-200"></div>
-
-              <button
-                onClick={() => {
-                  setActiveTab('vouchers')
-                  setShowDrawer(false)
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
-              >
-                <Gift size={20} />
-                <span className="text-sm font-medium">My Vouchers</span>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('redeem')
-                  setShowDrawer(false)
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
-              >
-                <WalletIcon size={20} />
-                <span className="text-sm font-medium">Redeem Funds</span>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('history')
-                  setShowDrawer(false)
-                }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
-              >
-                <History size={20} />
-                <span className="text-sm font-medium">Redemption History</span>
-              </button>
-              <button
-                onClick={() => setShowDrawer(false)}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
-              >
-                <Settings size={20} />
-                <span className="text-sm font-medium">Settings</span>
-              </button>
-            </nav>
-
-            <div className="absolute bottom-4 left-4 right-4">
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-2"
-                onClick={() => {
-                  auth.signOut()
-                  router.push('/')
-                }}
-              >
-                <LogOut size={18} />
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <main className="max-w-2xl mx-auto px-4 pb-24 pt-4">
         {activeTab === 'home' && (
@@ -509,14 +529,24 @@ Date: ${formatDate(voucher.createdAt)}
                 <Gift className="mr-2" size={20} />
                 View Gifts
               </Button>
-              <Button
-                onClick={() => setActiveTab('redeem')}
-                variant="outline"
-                className="h-14 text-base"
-              >
-                <WalletIcon className="mr-2" size={20} />
-                Redeem
-              </Button>
+              {((user?.senderBalance || 0) > 0 || (wallet?.availableCredits || 0) > 0) ? (
+                <Button
+                  onClick={() => setActiveTab('gift')}
+                  variant="outline"
+                  className="h-14 text-base"
+                >
+                  💝 Send Gift
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => setActiveTab('redeem')}
+                  variant="outline"
+                  className="h-14 text-base"
+                >
+                  <WalletIcon className="mr-2" size={20} />
+                  Redeem
+                </Button>
+              )}
             </div>
 
             <div className="mt-8">
@@ -703,6 +733,152 @@ Date: ${formatDate(voucher.createdAt)}
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {activeTab === 'gift' && (
+          <div className="space-y-4 animate-in fade-in">
+            <div>
+              <h1 className="text-2xl font-bold mb-1">Send a Gift</h1>
+              <p className="text-sm text-muted-foreground">Share your balance or pay with card</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-4 border border-slate-200/50">
+              <div className="space-y-3 mb-6">
+                <p className="text-sm font-semibold text-foreground">Choose Payment Method</p>
+                
+                {((user?.senderBalance || 0) > 0) && (
+                  <button
+                    onClick={() => setGiftPaymentMethod('sender-balance')}
+                    className={`w-full p-4 border-2 rounded-2xl transition text-left ${
+                      giftPaymentMethod === 'sender-balance'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-slate-200/50 hover:border-primary'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-sm">Preloaded Balance</p>
+                        <p className="text-lg font-bold text-primary">${((user?.senderBalance || 0) / 100).toFixed(2)}</p>
+                      </div>
+                      {giftPaymentMethod === 'sender-balance' && (
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <span className="text-white text-sm">✓</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )}
+
+                {(wallet?.availableCredits || 0) > 0 && (
+                  <button
+                    onClick={() => setGiftPaymentMethod('available-credits')}
+                    className={`w-full p-4 border-2 rounded-2xl transition text-left ${
+                      giftPaymentMethod === 'available-credits'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-slate-200/50 hover:border-primary'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-sm">Redeemed Credits</p>
+                        <p className="text-lg font-bold text-primary">{formatCurrency(wallet?.availableCredits || 0)}</p>
+                      </div>
+                      {giftPaymentMethod === 'available-credits' && (
+                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <span className="text-white text-sm">✓</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setGiftPaymentMethod('checkout')}
+                  className={`w-full p-4 border-2 rounded-2xl transition text-left ${
+                    giftPaymentMethod === 'checkout'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-slate-200/50 hover:border-primary'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm">Pay with Card</p>
+                      <p className="text-xs text-muted-foreground">Debit/Credit Card via Paystack</p>
+                    </div>
+                    {giftPaymentMethod === 'checkout' && (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <span className="text-white text-sm">✓</span>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              </div>
+
+              {giftPaymentMethod && (
+                <form onSubmit={handleSendGift} className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setGiftPaymentMethod(null)}
+                    className="text-sm text-primary flex items-center gap-1 mb-2 hover:underline"
+                  >
+                    ← Change payment method
+                  </button>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="recipientPhone" className="text-sm font-medium">Recipient Phone or Handle</Label>
+                    <Input
+                      id="recipientPhone"
+                      type="text"
+                      placeholder="Phone number or @handle"
+                      value={giftForm.recipientPhone}
+                      onChange={(e) =>
+                        setGiftForm({ ...giftForm, recipientPhone: e.target.value })
+                      }
+                      className="rounded-2xl border-slate-200/50"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="giftAmount" className="text-sm font-medium">Amount</Label>
+                    <Input
+                      id="giftAmount"
+                      type="number"
+                      placeholder="Enter amount"
+                      value={giftForm.amount}
+                      onChange={(e) =>
+                        setGiftForm({ ...giftForm, amount: e.target.value })
+                      }
+                      className="rounded-2xl border-slate-200/50"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="giftMessage" className="text-sm font-medium">Message (Optional)</Label>
+                    <Input
+                      id="giftMessage"
+                      type="text"
+                      placeholder="Add a message to your gift"
+                      value={giftForm.message}
+                      onChange={(e) =>
+                        setGiftForm({ ...giftForm, message: e.target.value })
+                      }
+                      className="rounded-2xl border-slate-200/50"
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    disabled={giftLoading}
+                    className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80"
+                  >
+                    {giftLoading ? 'Processing...' : '💝 Send Gift'}
+                  </Button>
+                </form>
+              )}
+            </div>
           </div>
         )}
 

@@ -152,6 +152,7 @@ export default function PaymentPage() {
           senderId: userId,
           recipientId: data.recipientPhone,
           recipientPhone: data.recipientPhone,
+          recipientHandle: (data as any).recipientHandle || undefined,
           message: data.message || '',
         }),
       })

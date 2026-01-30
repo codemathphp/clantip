@@ -83,6 +83,7 @@ export default function PaymentCallbackPage() {
               senderPhone: authUser.phoneNumber,
               recipientPhone: data.recipientPhone,
               recipientId: data.recipientPhone, // Use phone as ID for consistency
+              recipientHandle: data.recipientHandle || null,
               // `amount` stored as ZAR subunits (cents/kobo) so existing UI formatting works
               amount: amountToStore,
               // Senders always send in USD - store original USD amount
