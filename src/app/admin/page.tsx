@@ -137,7 +137,7 @@ export default function AdminDashboard() {
       console.error('Error loading dashboard data:', error)
       toast.error('Failed to load dashboard data')
     }
-  }, [])
+  }, [exchangeRates])
 
   // Check if user is admin
   useEffect(() => {

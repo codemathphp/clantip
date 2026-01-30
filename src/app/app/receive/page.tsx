@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { User } from '@/types'
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
-import Image from 'next/image'
 import { ArrowLeft, Copy, Share2, QrCode } from 'lucide-react'
 import QRCode from 'qrcode'
 
@@ -138,9 +138,11 @@ export default function ReceiveTipPage() {
               {/* QR Code Display */}
               <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl p-6 border-2 border-dashed border-primary/20">
                 {qrCode ? (
-                  <img
+                  <Image
                     src={qrCode}
                     alt="Receive QR Code"
+                    width={256}
+                    height={256}
                     className="w-64 h-64 mx-auto rounded-lg shadow-md"
                   />
                 ) : (

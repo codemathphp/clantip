@@ -307,7 +307,7 @@ export default function SettingsPage() {
           <div className="bg-white rounded-2xl p-6 border border-slate-200/50">
             <h2 className="text-lg font-semibold mb-2">Base Currency</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Change your base currency if you're now in a different country. A 2% conversion fee will apply.
+              Change your base currency if you&apos;re now in a different country. A 2% conversion fee will apply.
             </p>
 
             {/* Current Currency Info */}
