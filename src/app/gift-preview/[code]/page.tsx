@@ -6,7 +6,7 @@ import { db } from '@/firebase/config'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { Voucher } from '@/types'
 import { Button } from '@/components/ui/button'
-import { Gift, ArrowRight } from 'lucide-react'
+import { Gift, ArrowRight, Share2 } from 'lucide-react'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 
@@ -61,6 +61,34 @@ export default function GiftPreviewPage() {
     // Store the gift code so it can be redeemed after login
     sessionStorage.setItem('pendingGiftCode', code)
     router.push('/auth')
+  }
+
+  const handleShareGift = async () => {
+    const shareText = `I just received a ClanTip gift with Value Attached! 🎁\n\nClaim your gift:\n${window.location.href}`
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'You Received a ClanTip Gift!',
+          text: shareText,
+          url: window.location.href,
+        })
+        toast.success('Gift shared successfully!')
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error('Share error:', error)
+        }
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareText)
+        toast.success('Gift link copied to clipboard!')
+      } catch (error) {
+        console.error('Error copying:', error)
+        toast.error('Failed to copy link')
+      }
+    }
   }
 
   if (loading) {
@@ -160,17 +188,28 @@ export default function GiftPreviewPage() {
               </p>
             </div>
 
-            {/* CTA Button */}
-            <Button
-              onClick={handleClaimGift}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-base font-semibold"
-            >
-              <span>Claim Your Gift</span>
-              <ArrowRight size={20} className="ml-2" />
-            </Button>
+            {/* Action Buttons */}
+            <div className="space-y-3 mb-6">
+              <Button
+                onClick={handleClaimGift}
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-base font-semibold"
+              >
+                <span>Claim Your Gift</span>
+                <ArrowRight size={20} className="ml-2" />
+              </Button>
+
+              <Button
+                onClick={handleShareGift}
+                variant="outline"
+                className="w-full h-12 rounded-2xl"
+              >
+                <Share2 size={18} className="mr-2" />
+                Share This Gift
+              </Button>
+            </div>
 
             {/* Divider */}
-            <div className="my-6 flex items-center gap-3">
+            <div className="py-4 flex items-center gap-3">
               <div className="flex-1 border-t border-slate-200"></div>
               <span className="text-xs text-muted-foreground">Or</span>
               <div className="flex-1 border-t border-slate-200"></div>
