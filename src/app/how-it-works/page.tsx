@@ -139,7 +139,7 @@ export default function HowItWorksPage(){
         </section>
 
         {/* CTA Section */}
-        <section className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-8 border border-blue-200">
+        <section className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-lg p-8 border border-blue-200">
           <h2 className="text-2xl font-bold text-slate-900 mb-4">Ready to Get Started?</h2>
           <p className="text-slate-600 mb-6">It&apos;s that simple. In just a few minutes, you can send support to anyone in your family, anywhere across Africa.</p>
           <Link href="/" className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">

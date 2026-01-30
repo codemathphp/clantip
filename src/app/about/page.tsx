@@ -66,8 +66,8 @@ export default function AboutPage(){
               <div className="text-2xl font-bold text-blue-600 mb-2">$10M+</div>
               <p className="text-slate-600">Transferred to loved ones since launch</p>
             </div>
-            <div className="p-6 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600 mb-2">25+</div>
+            <div className="p-6 bg-teal-50 rounded-lg">
+              <div className="text-2xl font-bold text-teal-600 mb-2">25+</div>
               <p className="text-slate-600">African countries supported</p>
             </div>
           </div>

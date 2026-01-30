@@ -706,7 +706,7 @@ Recipient has been notified
                   router.push('/app/receive')
                   setShowDrawer(false)
                 }}
-                className="w-full flex flex-col items-center gap-2 px-4 py-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition text-white font-semibold"
+                className="w-full flex flex-col items-center gap-2 px-4 py-4 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 transition text-white font-semibold"
               >
                 <QrCode size={32} />
                 <span className="text-sm">Scan To Tip</span>

@@ -556,8 +556,8 @@ export default function AdminDashboard() {
                       <CardTitle className="text-sm font-medium text-muted-foreground">
                         Total Vouchers
                       </CardTitle>
-                      <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                        <ShoppingBag size={20} className="text-purple-600" />
+                      <div className="p-2 rounded-lg bg-teal-100 dark:bg-teal-900/20">
+                        <ShoppingBag size={20} className="text-teal-600" />
                       </div>
                     </div>
                   </CardHeader>
@@ -865,10 +865,10 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Fixed Fee */}
-                  <div className="space-y-3 p-4 rounded-lg bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-800">
+                  <div className="space-y-3 p-4 rounded-lg bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-800">
                     <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                        <DollarSign size={16} className="text-purple-600" />
+                      <div className="p-2 rounded-lg bg-teal-100 dark:bg-teal-900/20">
+                        <DollarSign size={16} className="text-teal-600" />
                       </div>
                       <Label className="font-semibold">Fixed Fee</Label>
                     </div>
@@ -879,10 +879,10 @@ export default function AdminDashboard() {
                       onChange={(e) =>
                         setSettings({ ...settings, fixedFee: parseFloat(e.target.value) })
                       }
-                      className="border-purple-200 dark:border-purple-800"
+                      className="border-teal-200 dark:border-teal-800"
                     />
                     <p className="text-xs text-muted-foreground">
-                      <span className="font-semibold text-purple-600">${settings.fixedFee}</span> per transaction
+                      <span className="font-semibold text-teal-600">${settings.fixedFee}</span> per transaction
                     </p>
                   </div>
 

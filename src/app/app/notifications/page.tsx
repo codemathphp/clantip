@@ -67,7 +67,7 @@ export default function NotificationsPage() {
       case 'voucher':
         return 'border-l-green-500 bg-green-50'
       case 'redemption':
-        return 'border-l-purple-500 bg-purple-50'
+        return 'border-l-orange-500 bg-orange-50'
       case 'admin':
         return 'border-l-red-500 bg-red-50'
       default:
@@ -82,7 +82,7 @@ export default function NotificationsPage() {
       case 'voucher':
         return 'bg-green-100 text-green-800'
       case 'redemption':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-orange-100 text-orange-800'
       case 'admin':
         return 'bg-red-100 text-red-800'
       default:
