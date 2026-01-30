@@ -18,6 +18,7 @@ import { NotificationCenter } from '@/components/NotificationCenter'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, ShoppingBag, Wallet as WalletIcon, ArrowRightLeft, QrCode } from 'lucide-react'
+import QRScanner from '@/components/QRScanner'
 
 export default function SenderDashboard() {
   const router = useRouter()
@@ -36,6 +37,7 @@ export default function SenderDashboard() {
   const [paymentMethod, setPaymentMethod] = useState<'balance' | 'checkout' | null>(null)
   const [topUpAmount, setTopUpAmount] = useState('')
   const [topUpLoading, setTopUpLoading] = useState(false)
+  const [showScannerModal, setShowScannerModal] = useState(false)
 
   // Helper: convert ZAR to USD
   const convertZarToUsd = (zarCents: number): number => {
@@ -703,8 +705,7 @@ Recipient has been notified
             <div className="absolute bottom-16 left-4 right-4">
               <button
                 onClick={() => {
-                  router.push('/app/receive')
-                  setShowDrawer(false)
+                  setShowScannerModal(true)
                 }}
                 className="w-full flex flex-col items-center gap-2 px-4 py-4 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 transition text-white font-semibold"
               >
@@ -728,6 +729,27 @@ Recipient has been notified
             </div>
           </div>
         </div>
+      )}
+
+      {/* QR Scanner modal */}
+      {showScannerModal && (
+        <QRScanner
+          onDetected={(raw) => {
+            let recipient = raw
+            try {
+              const parsed = new URL(raw)
+              const to = parsed.searchParams.get('to')
+              if (to) recipient = to
+            } catch (e) {
+              // raw value is not a URL — use as-is
+            }
+            setGiftForm((prev) => ({ ...prev, recipientPhone: recipient }))
+            setActiveTab('gift')
+            setShowScannerModal(false)
+            setShowDrawer(false)
+          }}
+          onClose={() => setShowScannerModal(false)}
+        />
       )}
 
       <main className="max-w-2xl mx-auto px-4 pb-24 pt-4">
