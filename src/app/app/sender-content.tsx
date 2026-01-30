@@ -645,6 +645,7 @@ Recipient has been notified
             <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 border border-slate-200/50">
               <p className="text-xs font-medium text-muted-foreground mb-2">Available Balance</p>
               <p className="text-4xl font-bold mb-3">${getTotalBalanceUsd().toFixed(2)}</p>
+              <p className="text-xs italic text-muted-foreground -mt-1">Worth Of Love Credit</p>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-muted-foreground text-xs">Preloaded</p>
