@@ -75,12 +75,12 @@ export default function ReceiveTipPage() {
   }
 
   const handleShare = async () => {
-    const shareText = `Support me on ClanTip! Scan this link or QR code to send me a tip:\n\n${shareLink}`
+    const shareText = `Send me some love / Appreciation on ClanTip 💛\n\nScan this link or QR code to gift me:\n\n${shareLink}`
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Receive Tip on ClanTip',
+          title: 'Send me some love on ClanTip',
           text: shareText,
           url: shareLink,
         })
