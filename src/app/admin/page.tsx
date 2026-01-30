@@ -24,9 +24,10 @@ import {
   DollarSign,
   CheckCircle,
   AlertCircle,
+  Sparkles,
 } from 'lucide-react'
 
-type AdminTab = 'dashboard' | 'store' | 'users' | 'settings' | 'notifications'
+type AdminTab = 'dashboard' | 'store' | 'icons' | 'users' | 'settings' | 'notifications'
 
 const DEFAULT_FEES = {
   platformFee: 5,
@@ -40,6 +41,7 @@ const DEFAULT_FEES = {
 const MENU_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'store', label: 'Store', icon: ShoppingBag },
+  { id: 'icons', label: 'Icon Store', icon: Sparkles },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -60,8 +62,10 @@ export default function AdminDashboard() {
   const [redemptions, setRedemptions] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [storeItems, setStoreItems] = useState<any[]>([])
+  const [microGiftIcons, setMicroGiftIcons] = useState<any[]>([])
   const [settings, setSettings] = useState(DEFAULT_FEES)
   const [newVoucher, setNewVoucher] = useState({ label: '', amount: '' })
+  const [newIcon, setNewIcon] = useState({ name: '', lottieUrl: '', amount: '', category: '', active: true })
   const [notificationMessage, setNotificationMessage] = useState('')
   const [notificationTitle, setNotificationTitle] = useState('')
   const [exchangeRates, setExchangeRates] = useState({
@@ -321,6 +325,51 @@ export default function AdminDashboard() {
       const updated = storeItems.filter((item) => item.id !== voucherId)
       setStoreItems(updated)
       toast.success('Voucher deleted')
+    }
+  }
+
+  const handleAddIcon = async () => {
+    if (!newIcon.name || !newIcon.amount || !newIcon.lottieUrl || !newIcon.category) {
+      toast.error('Please fill all icon fields')
+      return
+    }
+
+    try {
+      const newItem = {
+        id: Math.max(...microGiftIcons.map((i) => i.id), 0) + 1,
+        name: newIcon.name,
+        category: newIcon.category,
+        amount: parseFloat(newIcon.amount),
+        lottieUrl: newIcon.lottieUrl,
+        active: true,
+        createdAt: new Date(),
+      }
+
+      setMicroGiftIcons([...microGiftIcons, newItem])
+      setNewIcon({ name: '', lottieUrl: '', amount: '', category: '', active: true })
+      toast.success('Micro gift icon added')
+
+      // Save to Firestore
+      await addDoc(collection(db, 'microGiftIcons'), newItem)
+    } catch (error) {
+      console.error('Error adding icon:', error)
+      toast.error('Failed to add icon')
+    }
+  }
+
+  const handleToggleIcon = async (iconId: number) => {
+    const updated = microGiftIcons.map((icon) =>
+      icon.id === iconId ? { ...icon, active: !icon.active } : icon
+    )
+    setMicroGiftIcons(updated)
+    toast.success('Icon updated')
+  }
+
+  const handleDeleteIcon = async (iconId: number) => {
+    if (window.confirm('Are you sure you want to delete this icon?')) {
+      const updated = microGiftIcons.filter((icon) => icon.id !== iconId)
+      setMicroGiftIcons(updated)
+      toast.success('Icon deleted')
     }
   }
 
@@ -724,6 +773,122 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Icon Store Tab */}
+        {activeTab === 'icons' && (
+          <div className="space-y-8 animate-fadeIn">
+            {/* Add New Micro Gift Icon */}
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingBag size={24} className="text-primary" />
+                  Add New Micro Gift Icon
+                </CardTitle>
+                <CardDescription>Create premium emoji/lottie-based microgifts for impulse gifting</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="space-y-2">
+                    <Label>Icon Name</Label>
+                    <Input
+                      placeholder="e.g., Heart, Rose"
+                      value={newIcon.name}
+                      onChange={(e) => setNewIcon({ ...newIcon, name: e.target.value })}
+                      className="border-border focus:ring-primary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Input
+                      placeholder="e.g., Love, Celebration"
+                      value={newIcon.category}
+                      onChange={(e) => setNewIcon({ ...newIcon, category: e.target.value })}
+                      className="border-border focus:ring-primary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Amount (USD)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.99"
+                      value={newIcon.amount}
+                      onChange={(e) => setNewIcon({ ...newIcon, amount: e.target.value })}
+                      className="border-border focus:ring-primary"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Lottie JSON URL</Label>
+                    <Input
+                      placeholder="https://lottiefiles.com/..."
+                      value={newIcon.lottieUrl}
+                      onChange={(e) => setNewIcon({ ...newIcon, lottieUrl: e.target.value })}
+                      className="border-border focus:ring-primary"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button onClick={handleAddIcon} className="w-full bg-primary hover:bg-primary/90">
+                      + Add Icon
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Current Micro Gift Icons */}
+            <Card className="border-0 shadow-md">
+              <CardHeader>
+                <CardTitle>Micro Gift Icons ({microGiftIcons.length})</CardTitle>
+                <CardDescription>Manage premium impulse gift icons (preloaded balance only)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-border">
+                      <tr>
+                        <th className="text-left py-3 px-2 font-semibold">Icon Name</th>
+                        <th className="text-left py-3 px-2 font-semibold">Category</th>
+                        <th className="text-left py-3 px-2 font-semibold">Amount</th>
+                        <th className="text-left py-3 px-2 font-semibold">Status</th>
+                        <th className="text-left py-3 px-2 font-semibold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {microGiftIcons.map((icon) => (
+                        <tr key={icon.id} className="hover:bg-muted/30 transition">
+                          <td className="py-3 px-2 font-medium">{icon.name}</td>
+                          <td className="py-3 px-2 text-muted-foreground">{icon.category}</td>
+                          <td className="py-3 px-2 font-semibold text-primary">${parseFloat(icon.amount).toFixed(2)}</td>
+                          <td className="py-3 px-2">
+                            <Badge variant={icon.active ? 'default' : 'secondary'}>
+                              {icon.active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-2 flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleToggleIcon(icon.id)}
+                            >
+                              {icon.active ? 'Disable' : 'Enable'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteIcon(icon.id)}
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
