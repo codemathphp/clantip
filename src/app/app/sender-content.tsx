@@ -735,21 +735,30 @@ Recipient has been notified
               >
                 <LogOut size={18} />
                 Sign Out
-              {/* Top Up removed from bottom nav to simplify sender UI */}
-            try {
-              const parsed = new URL(raw)
-              const to = parsed.searchParams.get('to')
-              if (to) recipient = to
-            } catch (e) {
-              // raw value is not a URL — use as-is
-            }
-            setGiftForm((prev) => ({ ...prev, recipientPhone: recipient }))
-            setActiveTab('gift')
-            setShowScannerModal(false)
-            setShowDrawer(false)
-          }}
-          onClose={() => setShowScannerModal(false)}
-        />
+              </Button>
+            </div>
+
+            {showScannerModal && (
+              <QRScanner
+                onDetected={(raw) => {
+                  let recipient = raw
+                  try {
+                    const parsed = new URL(raw)
+                    const to = parsed.searchParams.get('to')
+                    if (to) recipient = to
+                  } catch (e) {
+                    // raw value is not a URL — use as-is
+                  }
+                  setGiftForm((prev) => ({ ...prev, recipientPhone: recipient }))
+                  setActiveTab('gift')
+                  setShowScannerModal(false)
+                  setShowDrawer(false)
+                }}
+                onClose={() => setShowScannerModal(false)}
+              />
+            )}
+          </div>
+        </div>
       )}
 
       <main className="max-w-2xl mx-auto px-4 pb-24 pt-4">
