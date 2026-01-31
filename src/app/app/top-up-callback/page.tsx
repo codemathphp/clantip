@@ -2,9 +2,8 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { auth, db } from '@/firebase/config'
+import { auth } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc, updateDoc, setDoc, collection } from 'firebase/firestore'
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
 import { CheckCircle, XCircle, Loader } from 'lucide-react'
@@ -59,80 +58,29 @@ function TopUpCallbackContent() {
             const topUpData = JSON.parse(pendingTopUp)
             const amountCents = topUpData.amountCents
 
-            // Verify payment with Paystack
-            const verifyRes = await fetch(
-              `https://api.paystack.co/transaction/verify/${reference}`,
-              {
-                method: 'GET',
-                headers: {
-                  Authorization: `Bearer ${process.env.NEXT_PUBLIC_PAYSTACK_SECRET_KEY}`,
-                },
-              }
-            )
-
-            const verifyData = await verifyRes.json()
-
-            if (!verifyData.status || verifyData.data.status !== 'success') {
-              setStatus('failed')
-              setMessage('Payment verification failed. Please contact support.')
-              return
-            }
-
-            // Get user from canonical users/{uid} and get their phone
-            const userRef = doc(db, 'users', authUser.uid)
-            const userSnap = await getDoc(userRef)
-
-            if (!userSnap.exists()) {
-              setStatus('failed')
-              setMessage('User profile not found')
-              return
-            }
-
-            const userData = userSnap.data() as any
-            const userPhone = userData.phone || userData.phoneE164
-            const currentBalance = (userData.senderBalance || 0) as number
-            const newBalance = currentBalance + amountCents
-
-            // Update canonical user doc (users/{uid})
-            await updateDoc(userRef, {
-              senderBalance: newBalance,
-              updatedAt: new Date(),
+            // Call backend top-up API to verify and credit balance
+            const topUpRes = await fetch('/api/microgifts/top-up', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                reference,
+                uid: authUser.uid,
+                amountCents,
+              }),
             })
 
-            // Also update legacy users/{phone} doc for backward compatibility if phone exists
-            if (userPhone) {
-              try {
-                const legacyUserRef = doc(db, 'users', userPhone)
-                await updateDoc(legacyUserRef, {
-                  senderBalance: newBalance,
-                  updatedAt: new Date(),
-                })
-              } catch (e) {
-                console.warn('Failed to update legacy user doc', e)
-              }
-            }
-
-            // Create a notification for the top-up
-            try {
-              const notificationRef = doc(collection(db, 'notifications'))
-              await setDoc(notificationRef, {
-                userId: authUser.uid,
-                title: '💰 Wallet Topped Up',
-                body: `You added $${(amountCents / 100).toFixed(2)} to your wallet. Ready to send some Love across the world! 🌍`,
-                read: false,
-                type: 'payment',
-                relatedId: topUpData.reference,
-                createdAt: new Date(),
-              })
-            } catch (e) {
-              console.warn('Failed to create notification', e)
+            const topUpResult = await topUpRes.json()
+            if (!topUpRes.ok) {
+              setStatus('failed')
+              setMessage(topUpResult.error || 'Failed to process top-up')
+              return
             }
 
             // Clear pending top-up from sessionStorage
             sessionStorage.removeItem('pendingTopUp')
 
             setStatus('success')
-            setMessage(`✅ Wallet topped up! You now have $${(newBalance / 100).toFixed(2)}\n💝 Ready to send some Love across the world!`)
+            setMessage(`✅ Wallet topped up! You now have $${topUpResult.newBalance?.toFixed(2) || '0.00'}\n💝 Ready to send some Love across the world!`)
 
             // Redirect after 3 seconds
             setTimeout(() => {

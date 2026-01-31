@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react'
 
 type Props = {
-  src: string // Lottie JSON URL or data
+  src: string // Lottie JSON URL, local path (e.g., '/animations/heart.json'), or file name (e.g., 'heart.json')
   loop?: boolean
   autoplay?: boolean
   className?: string
@@ -33,8 +33,21 @@ export default function LottieIcon({
         const lottie = await import('lottie-web')
         const lottieDefault = (lottie as any).default || lottie
 
+        // Resolve the source path
+        // If it's just a filename or doesn't start with '/', prepend /animations/
+        let animationUrl = src
+        if (!src.startsWith('http') && !src.startsWith('/')) {
+          animationUrl = `/animations/${src}`
+        } else if (!src.startsWith('http') && src.startsWith('/') && !src.includes('/animations/')) {
+          // If it's an absolute path without /animations/, assume local
+          animationUrl = `/animations${src}`
+        }
+
         // Fetch the animation JSON
-        const response = await fetch(src)
+        const response = await fetch(animationUrl)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch animation: ${animationUrl}`)
+        }
         const animationData = await response.json()
 
         if (containerRef.current && !lottieRef.current) {

@@ -65,7 +65,8 @@ export default function AdminDashboard() {
   const [microGiftIcons, setMicroGiftIcons] = useState<any[]>([])
   const [settings, setSettings] = useState(DEFAULT_FEES)
   const [newVoucher, setNewVoucher] = useState({ label: '', amount: '' })
-  const [newIcon, setNewIcon] = useState({ name: '', lottieUrl: '', amount: '', category: '', active: true })
+  const [newIcon, setNewIcon] = useState({ name: '', animationFile: '', amount: '', category: '', active: true })
+  const [availableAnimations, setAvailableAnimations] = useState<string[]>([])
   const [notificationMessage, setNotificationMessage] = useState('')
   const [notificationTitle, setNotificationTitle] = useState('')
   const [exchangeRates, setExchangeRates] = useState({
@@ -164,6 +165,7 @@ export default function AdminDashboard() {
 
         setUser(authUser)
         await loadDashboardData()
+        await loadAvailableAnimations()
       } catch (error) {
         console.error('Auth check error:', error)
         router.push('/')
@@ -329,7 +331,7 @@ export default function AdminDashboard() {
   }
 
   const handleAddIcon = async () => {
-    if (!newIcon.name || !newIcon.amount || !newIcon.lottieUrl || !newIcon.category) {
+    if (!newIcon.name || !newIcon.amount || !newIcon.animationFile || !newIcon.category) {
       toast.error('Please fill all icon fields')
       return
     }
@@ -340,13 +342,14 @@ export default function AdminDashboard() {
         name: newIcon.name,
         category: newIcon.category,
         amount: parseFloat(newIcon.amount),
-        lottieUrl: newIcon.lottieUrl,
+        lottieUrl: `/animations/${newIcon.animationFile}`,
+        animationFile: newIcon.animationFile,
         active: true,
         createdAt: new Date(),
       }
 
       setMicroGiftIcons([...microGiftIcons, newItem])
-      setNewIcon({ name: '', lottieUrl: '', amount: '', category: '', active: true })
+      setNewIcon({ name: '', animationFile: '', amount: '', category: '', active: true })
       toast.success('Micro gift icon added')
 
       // Save to Firestore
@@ -388,6 +391,19 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error saving settings:', error)
       toast.error('Failed to save settings')
+    }
+  }
+
+  // Load available animations from public/animations via API
+  const loadAvailableAnimations = async () => {
+    try {
+      const res = await fetch('/api/animations/list')
+      if (res.ok) {
+        const data = await res.json()
+        setAvailableAnimations(data.files || [])
+      }
+    } catch (error) {
+      console.error('Error loading animations list:', error)
     }
   }
 
@@ -823,13 +839,17 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Lottie JSON URL</Label>
-                    <Input
-                      placeholder="https://lottiefiles.com/..."
-                      value={newIcon.lottieUrl}
-                      onChange={(e) => setNewIcon({ ...newIcon, lottieUrl: e.target.value })}
-                      className="border-border focus:ring-primary"
-                    />
+                    <Label>Animation File</Label>
+                    <select
+                      value={newIcon.animationFile}
+                      onChange={(e) => setNewIcon({ ...newIcon, animationFile: e.target.value })}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                    >
+                      <option value="">-- Select animation --</option>
+                      {availableAnimations.map((f) => (
+                        <option key={f} value={f}>{f}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="flex items-end">
                     <Button onClick={handleAddIcon} className="w-full bg-primary hover:bg-primary/90">
@@ -850,18 +870,30 @@ export default function AdminDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="border-b border-border">
-                      <tr>
-                        <th className="text-left py-3 px-2 font-semibold">Icon Name</th>
-                        <th className="text-left py-3 px-2 font-semibold">Category</th>
-                        <th className="text-left py-3 px-2 font-semibold">Amount</th>
-                        <th className="text-left py-3 px-2 font-semibold">Status</th>
-                        <th className="text-left py-3 px-2 font-semibold">Actions</th>
-                      </tr>
+                        <tr>
+                          <th className="text-left py-3 px-2 font-semibold">Preview</th>
+                          <th className="text-left py-3 px-2 font-semibold">Icon Name</th>
+                          <th className="text-left py-3 px-2 font-semibold">Category</th>
+                          <th className="text-left py-3 px-2 font-semibold">Amount</th>
+                          <th className="text-left py-3 px-2 font-semibold">Status</th>
+                          <th className="text-left py-3 px-2 font-semibold">Actions</th>
+                        </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {microGiftIcons.map((icon) => (
                         <tr key={icon.id} className="hover:bg-muted/30 transition">
-                          <td className="py-3 px-2 font-medium">{icon.name}</td>
+                            <td className="py-3 px-2 w-20">
+                              {icon.lottieUrl ? (
+                                // Use client-only LottieIcon component
+                                <div className="w-12 h-12">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={icon.lottieUrl.replace('/animations/', '/animations/') } alt={icon.name} className="w-12 h-12 object-contain" />
+                                </div>
+                              ) : (
+                                <div className="w-12 h-12 bg-muted rounded" />
+                              )}
+                            </td>
+                            <td className="py-3 px-2 font-medium">{icon.name}</td>
                           <td className="py-3 px-2 text-muted-foreground">{icon.category}</td>
                           <td className="py-3 px-2 font-semibold text-primary">${parseFloat(icon.amount).toFixed(2)}</td>
                           <td className="py-3 px-2">
