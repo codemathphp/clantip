@@ -136,6 +136,17 @@ export default function AdminDashboard() {
       // Load store items
       loadStoreItems()
 
+      // Load micro gift icons into admin state
+      try {
+        const iconsSnap = await getDocs(collection(db, 'microGiftIcons'))
+        const icons = iconsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
+        // Sort by numeric id if present
+        icons.sort((a: any, b: any) => (Number(a.id) || 0) - (Number(b.id) || 0))
+        setMicroGiftIcons(icons)
+      } catch (e) {
+        console.warn('Failed to load microGiftIcons for admin:', e)
+      }
+
       // Load settings
       loadSettings()
     } catch (error) {

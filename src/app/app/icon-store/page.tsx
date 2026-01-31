@@ -56,7 +56,7 @@ export default function IconStorePage() {
         if (userSnap.exists()) {
           const userData = userSnap.data() as User
           setUser(userData)
-          setLoveUnits(userData.senderBalance / 100) // Convert cents to dollars
+          setLoveUnits((userData.senderBalance || 0) / 100) // Convert cents to units, guard undefined
         }
 
         // Load active icons from Firestore
@@ -107,7 +107,7 @@ export default function IconStorePage() {
       const json = await response.json()
       if (!response.ok) throw new Error(json.error || 'Failed to send')
 
-      toast.success(`💝 ${selectedIcon.name} sent! Love units: ${json.newBalance.toFixed(2)}`)
+      toast.success(`💝 Sent! Love units: ${json.newBalance.toFixed(2)}`)
       setLoveUnits(json.newBalance)
       setSelectedIcon(null)
       setRecipientHandle('')
@@ -123,14 +123,7 @@ export default function IconStorePage() {
   const totalPages = Math.ceil(icons.length / ICONS_PER_PAGE)
   const startIdx = (currentPage - 1) * ICONS_PER_PAGE
   const paginatedIcons = icons.slice(startIdx, startIdx + ICONS_PER_PAGE)
-  const groupedByCategory = paginatedIcons.reduce(
-    (acc, icon) => {
-      if (!acc[icon.category]) acc[icon.category] = []
-      acc[icon.category].push(icon)
-      return acc
-    },
-    {} as Record<string, MicroGiftIcon[]>
-  )
+  // Show all icons in a single collection (no categories)
 
   if (loading) {
     return (
@@ -159,14 +152,14 @@ export default function IconStorePage() {
             >
               <ArrowLeft size={20} />
             </Button>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Heart className="text-red-500" size={28} />
-              Love Store
+            <h1 className="text-lg font-semibold flex items-center gap-2">
+              <Heart className="text-red-500" size={22} />
+              Tap and Send
             </h1>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Available</p>
-            <p className="text-2xl font-bold text-primary">{loveUnits.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">Preloaded</p>
+            <p className="text-2xl font-bold text-primary">{(isNaN(loveUnits) ? 0 : loveUnits).toFixed(2)}</p>
             <p className="text-xs text-muted-foreground">Love Units</p>
           </div>
         </div>
@@ -179,7 +172,7 @@ export default function IconStorePage() {
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
             <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Send {selectedIcon.name}</h2>
+                <h2 className="text-xl font-bold">Send</h2>
                 <button
                   onClick={() => setSelectedIcon(null)}
                   className="text-muted-foreground hover:text-foreground"
@@ -246,55 +239,44 @@ export default function IconStorePage() {
           </div>
         )}
 
-        {/* Icons Grid */}
-        {Object.entries(groupedByCategory).length === 0 ? (
+        {/* Icons Grid - unified list (no categories) */}
+        {paginatedIcons.length === 0 ? (
           <div className="text-center py-12">
             <Heart size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground">No love icons available yet</p>
+            <p className="text-muted-foreground">No icons available</p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {Object.entries(groupedByCategory).map(([category, categoryIcons]) => (
-              <div key={category}>
-                <h2 className="text-lg font-semibold mb-4 text-slate-700">{category}</h2>
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {categoryIcons.map((icon) => (
-                    <button
-                      key={icon.id}
-                      onClick={() => setSelectedIcon(icon)}
-                      className="group relative bg-white rounded-xl p-4 hover:shadow-lg transition-all hover:scale-105 active:scale-95 border border-slate-200/50"
-                      disabled={loveUnits < icon.amount}
-                    >
-                      {/* Icon Animation */}
-                      <div className="w-full aspect-square mb-2">
-                        <LottieIcon
-                          src={icon.lottieUrl}
-                          themeColor="#1a9b8e"
-                          className="w-full h-full"
-                        />
-                      </div>
-
-                      {/* Icon Name & Price */}
-                      <p className="text-xs font-semibold text-center mb-1 text-foreground">
-                        {icon.name}
-                      </p>
-                      <div className="flex items-center justify-center gap-1">
-                        <Heart size={12} className="text-red-500" />
-                        <p className="text-sm font-bold text-primary">
-                          {icon.amount.toFixed(2)}
-                        </p>
-                      </div>
-
-                      {/* Insufficient Balance */}
-                      {loveUnits < icon.amount && (
-                        <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
-                          <p className="text-white text-xs font-semibold">Insufficient</p>
-                        </div>
-                      )}
-                    </button>
-                  ))}
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+            {paginatedIcons.map((icon) => (
+              <button
+                key={icon.id}
+                onClick={() => setSelectedIcon(icon)}
+                className="group relative rounded-lg p-1 hover:shadow-2xl transition-all hover:scale-105 active:scale-95"
+                disabled={loveUnits < icon.amount}
+                aria-label={`Send ${icon.amount} units`}
+              >
+                {/* Icon Animation - larger and flush with page (no card background) */}
+                <div className="w-full aspect-square flex items-center justify-center">
+                  <LottieIcon
+                    src={icon.lottieUrl}
+                    themeColor="#1a9b8e"
+                    className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28"
+                  />
                 </div>
-              </div>
+
+                {/* Price only - centered */}
+                <div className="flex items-center justify-center gap-1 mt-1">
+                  <Heart size={12} className="text-red-500" />
+                  <p className="text-sm font-bold text-primary">{icon.amount.toFixed(2)}</p>
+                </div>
+
+                {/* Insufficient Balance Overlay */}
+                {loveUnits < icon.amount && (
+                  <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
+                    <p className="text-white text-xs font-semibold">Insufficient</p>
+                  </div>
+                )}
+              </button>
             ))}
           </div>
         )}
