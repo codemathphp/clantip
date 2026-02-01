@@ -146,9 +146,7 @@ export default function IconStorePage() {
             </h1>
           </div>
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">Preloaded</p>
-            <p className="text-2xl font-bold text-primary">{(isNaN(loveUnits) ? 0 : loveUnits).toFixed(2)}</p>
-            <p className="text-xs text-muted-foreground">Love Units</p>
+            <p className="text-3xl font-bold text-primary">{(isNaN(loveUnits) ? 0 : loveUnits).toFixed(2)}</p>
           </div>
         </div>
       </header>
@@ -189,7 +187,10 @@ export default function IconStorePage() {
                     className="w-full h-full"
                   />
                 </div>
-                <p className="text-sm text-muted-foreground">${selectedIcon.amount.toFixed(2)}</p>
+                <div className="flex items-center gap-1">
+                  <Heart size={16} className="text-red-500" />
+                  <p className="text-sm font-bold text-primary">{selectedIcon.amount.toFixed(2)}</p>
+                </div>
               </div>
 
               {/* Recipient Input */}
@@ -255,7 +256,7 @@ export default function IconStorePage() {
                   }`}>
                     <Heart size={12} className={hasBalance ? 'text-red-500' : 'text-slate-400'} />
                     <p className={`text-sm font-bold ${hasBalance ? 'text-primary' : 'text-slate-400'}`}>
-                      ${icon.amount.toFixed(2)}
+                      {icon.amount.toFixed(2)}
                     </p>
                   </div>
                 </button>
