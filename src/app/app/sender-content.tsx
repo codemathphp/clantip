@@ -1253,17 +1253,6 @@ Recipient has been notified
             <span className="text-xs font-medium">Gift</span>
           </button>
           <button
-            onClick={() => setActiveTab('top-up')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap ${
-              activeTab === 'top-up'
-                ? 'text-primary'
-                : 'text-muted-foreground'
-            }`}
-          >
-            <WalletIcon size={24} />
-            <span className="text-xs font-medium">Top Up</span>
-          </button>
-          <button
             onClick={() => setActiveTab('store')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap ${
               activeTab === 'store'
