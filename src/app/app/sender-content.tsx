@@ -716,8 +716,9 @@ Recipient has been notified
               <div className="my-3 border-t border-slate-200 dark:border-slate-700"></div>
 
               <button
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
+                onClick={(e) => e.preventDefault()}
+                aria-disabled="true"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg opacity-60 cursor-not-allowed transition text-left dark:text-slate-100"
               >
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 <span className="text-sm font-medium">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>

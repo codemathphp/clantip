@@ -817,7 +817,7 @@ Date: ${formatDate(voucher.createdAt)}
             <div className="grid grid-cols-2 gap-3 mt-6">
               <Button
                 onClick={() => setActiveTab('vouchers')}
-                className="bg-gradient-to-r from-primary to-primary/80 h-14 text-base text-white"
+                className="bg-gradient-to-r from-primary to-primary/80 h-14 text-base text-primary-foreground"
               >
                 <Gift className="mr-2" size={20} />
                 View Gifts

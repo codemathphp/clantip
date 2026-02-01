@@ -10,13 +10,13 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+  const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [mounted, setMounted] = useState(false)
 
   // Initialize theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
-    const initialTheme = savedTheme || 'dark'
+    const initialTheme = savedTheme || 'light'
     setTheme(initialTheme)
     applyTheme(initialTheme)
     setMounted(true)
@@ -56,7 +56,7 @@ export function useTheme() {
   if (context === undefined) {
     // Return default values during SSR
     return {
-      theme: 'dark' as const,
+      theme: 'light' as const,
       toggleTheme: () => {}
     }
   }
