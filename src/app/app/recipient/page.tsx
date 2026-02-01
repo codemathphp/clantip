@@ -52,6 +52,12 @@ export default function RecipientDashboard() {
   })
   const [giftPaymentMethod, setGiftPaymentMethod] = useState<'sender-balance' | 'available-credits' | 'checkout' | null>(null)
   const [giftLoading, setGiftLoading] = useState(false)
+  const [preloadForm, setPreloadForm] = useState({
+    amount: '',
+  })
+  const [preloadPaymentMethod, setPreloadPaymentMethod] = useState<'checkout' | null>(null)
+  const [preloadLoading, setPreloadLoading] = useState(false)
+  const [billingInfo, setBillingInfo] = useState<any>(null)
 
   useEffect(() => {
     // Load exchange rates for converting ZAR -> recipient currency
@@ -192,6 +198,83 @@ export default function RecipientDashboard() {
     } catch (error: any) {
       console.error('Redeem voucher error:', error)
       toast.error(error.message || 'Failed to redeem voucher')
+    }
+  }
+
+  const handlePreloadInitiate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!preloadForm.amount) {
+      toast.error('Please enter an amount')
+      return
+    }
+
+    const baseAmount = parseFloat(preloadForm.amount)
+    if (baseAmount <= 0) {
+      toast.error('Amount must be greater than 0')
+      return
+    }
+
+    setPreloadLoading(true)
+    try {
+      // Calculate charges (e.g., 5% processing fee)
+      const processingFeePercent = 0.05
+      const processingFee = baseAmount * processingFeePercent
+      const totalAmount = baseAmount + processingFee
+
+      // Show billing info
+      setBillingInfo({
+        baseAmount,
+        processingFee,
+        totalAmount,
+        currency: 'USD',
+      })
+
+      const userEmail = user?.email || `user+${user?.phone}@clantip.com`
+      const reference = `PRELOAD_${user?.phone}_${Date.now()}`
+
+      // Initialize payment via server
+      const initRes = await fetch('/api/payments/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          amount: totalAmount,
+          senderId: user?.phone || '',
+          recipientId: user?.phone || '',
+          recipientPhone: user?.phone || '',
+          message: 'Preload funds for gifting',
+          currency: 'USD',
+          reference,
+          type: 'preload',
+        }),
+      })
+
+      const initJson = await initRes.json()
+      if (!initJson.success) {
+        throw new Error(initJson.error || 'Failed to initialize payment')
+      }
+
+      const paystackData = initJson.data
+
+      // Store preload info in sessionStorage
+      sessionStorage.setItem(
+        'pendingPreload',
+        JSON.stringify({
+          baseAmount,
+          totalAmount,
+          processingFee,
+          reference: paystackData.reference || reference,
+          timestamp: Date.now(),
+        })
+      )
+
+      // Redirect to payment gateway
+      window.location.href = paystackData.authorization_url
+    } catch (error: any) {
+      console.error('Preload initiation error:', error)
+      toast.error(error.message || 'Failed to initiate preload')
+      setPreloadLoading(false)
+      setBillingInfo(null)
     }
   }
 
@@ -1062,90 +1145,152 @@ Date: ${formatDate(voucher.createdAt)}
           <div className="space-y-4 animate-in fade-in">
             <div>
               <h1 className="text-2xl font-bold mb-1">Send a Gift</h1>
-              <p className="text-sm text-muted-foreground">Share your balance or pay with card</p>
+              <p className="text-sm text-muted-foreground">Load funds or share your balance</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 border border-slate-200/50">
-              <div className="space-y-3 mb-6">
-                <p className="text-sm font-semibold text-foreground">Choose Payment Method</p>
-                
-                {((user?.senderBalance || 0) > 0) && (
-                  <button
-                    onClick={() => setGiftPaymentMethod('sender-balance')}
-                    className={`w-full p-4 border-2 rounded-2xl transition text-left ${
-                      giftPaymentMethod === 'sender-balance'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-slate-200/50 hover:border-primary'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-sm">Preloaded Balance</p>
-                        <p className="text-lg font-bold text-primary">${((user?.senderBalance || 0) / 100).toFixed(2)}</p>
-                      </div>
-                      {giftPaymentMethod === 'sender-balance' && (
-                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                          <span className="text-white text-sm">✓</span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                )}
+            {/* Tabs for Preload vs Gift */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => {
+                  setPreloadPaymentMethod(null)
+                  setBillingInfo(null)
+                  setPreloadForm({ amount: '' })
+                }}
+                className={`px-4 py-2 rounded-full font-medium transition ${
+                  !giftPaymentMethod
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                }`}
+              >
+                Load Funds
+              </button>
+              <button
+                onClick={() => {
+                  setGiftPaymentMethod(null)
+                  setGiftForm({ recipientPhone: '', recipientCountry: 'ZA', amount: '', message: '' })
+                }}
+                className={`px-4 py-2 rounded-full font-medium transition ${
+                  giftPaymentMethod
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                }`}
+              >
+                Send Gift
+              </button>
+            </div>
 
-                {(wallet?.availableCredits || 0) > 0 && (
-                  <button
-                    onClick={() => setGiftPaymentMethod('available-credits')}
-                    className={`w-full p-4 border-2 rounded-2xl transition text-left ${
-                      giftPaymentMethod === 'available-credits'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-slate-200/50 hover:border-primary'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-sm">Redeemed Credits</p>
-                        <p className="text-lg font-bold text-primary">{formatCurrency(wallet?.availableCredits || 0)}</p>
-                      </div>
-                      {giftPaymentMethod === 'available-credits' && (
-                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                          <span className="text-white text-sm">✓</span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                )}
+            {/* PRELOAD FLOW */}
+            {!giftPaymentMethod && (
+              <div className="bg-white rounded-2xl p-6 border border-slate-200/50 space-y-4">
+                <div className="rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 p-4 border border-primary/20">
+                  <p className="text-sm font-medium text-foreground mb-2">💳 Preload Your Wallet</p>
+                  <p className="text-xs text-muted-foreground">Add funds to your account. You can immediately start showing love with your preloaded balance.</p>
+                </div>
 
-                <button
-                  onClick={() => setGiftPaymentMethod('checkout')}
-                  className={`w-full p-4 border-2 rounded-2xl transition text-left ${
-                    giftPaymentMethod === 'checkout'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-slate-200/50 hover:border-primary'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-sm">Pay with Card</p>
-                      <p className="text-xs text-muted-foreground">Card Payment</p>
-                    </div>
-                    {giftPaymentMethod === 'checkout' && (
-                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                        <span className="text-white text-sm">✓</span>
+                {billingInfo ? (
+                  // BILLING DETAILS VIEW
+                  <div className="space-y-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBillingInfo(null)
+                        setPreloadForm({ amount: '' })
+                        setPreloadPaymentMethod(null)
+                      }}
+                      className="text-sm text-primary flex items-center gap-1 hover:underline"
+                    >
+                      ← Edit amount
+                    </button>
+
+                    <div className="rounded-2xl bg-slate-50 p-4 space-y-3 border border-slate-200">
+                      <h3 className="font-semibold text-sm">Order Summary</h3>
+                      
+                      <div className="flex items-center justify-between py-2 border-b border-slate-200">
+                        <span className="text-sm text-muted-foreground">Amount to Load</span>
+                        <span className="font-semibold">${billingInfo.baseAmount.toFixed(2)}</span>
                       </div>
-                    )}
+
+                      <div className="flex items-center justify-between py-2 border-b border-slate-200">
+                        <span className="text-sm text-muted-foreground">Processing Fee (5%)</span>
+                        <span className="font-semibold text-amber-600">${billingInfo.processingFee.toFixed(2)}</span>
+                      </div>
+
+                      <div className="flex items-center justify-between py-3 bg-white rounded-lg px-3 border border-slate-200">
+                        <span className="text-sm font-bold">Total to Pay</span>
+                        <span className="text-lg font-bold text-primary">${billingInfo.totalAmount.toFixed(2)} USD</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={async () => {
+                        setPreloadLoading(true)
+                        setTimeout(() => {
+                          // The redirect happens in the handlePreloadInitiate
+                          // This ensures the button state is updated
+                        }, 100)
+                      }}
+                      disabled={preloadLoading}
+                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80"
+                    >
+                      {preloadLoading ? 'Redirecting...' : 'Proceed to Payment'}
+                    </Button>
+
+                    <p className="text-xs text-center text-muted-foreground">
+                      🔒 Secure payment via Paystack Gateway
+                    </p>
                   </div>
-                </button>
-              </div>
+                ) : (
+                  // AMOUNT INPUT VIEW
+                  <form onSubmit={handlePreloadInitiate} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="preloadAmount" className="text-sm font-medium">Amount (USD)</Label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-3 text-muted-foreground">$</span>
+                        <Input
+                          id="preloadAmount"
+                          type="number"
+                          placeholder="0.00"
+                          value={preloadForm.amount}
+                          onChange={(e) => {
+                            setPreloadForm({ amount: e.target.value })
+                          }}
+                          className="rounded-2xl border-slate-200/50 pl-8"
+                          step="0.01"
+                          min="1"
+                          max="10000"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">Minimum: $1 | Maximum: $10,000</p>
+                    </div>
 
-              {giftPaymentMethod && (
+                    <Button 
+                      type="submit" 
+                      disabled={preloadLoading || !preloadForm.amount}
+                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80"
+                    >
+                      {preloadLoading ? 'Loading...' : 'Review Order'}
+                    </Button>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {/* GIFT SENDING FLOW */}
+            {giftPaymentMethod && (
+              <div className="bg-white rounded-2xl p-4 border border-slate-200/50">
                 <form onSubmit={handleSendGift} className="space-y-4">
                   <button
                     type="button"
                     onClick={() => setGiftPaymentMethod(null)}
                     className="text-sm text-primary flex items-center gap-1 mb-2 hover:underline"
                   >
-                    ← Change payment method
+                    ← Back to payment methods
                   </button>
+
+                  <div className="rounded-2xl bg-slate-50 p-3 border border-slate-200">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Sending from</p>
+                    <p className="text-sm font-semibold">{giftPaymentMethod === 'sender-balance' ? 'Preloaded Balance' : giftPaymentMethod === 'available-credits' ? 'Redeemed Credits' : 'Card Payment'}</p>
+                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="recipientPhone" className="text-sm font-medium">Recipient Phone or Handle</Label>
@@ -1196,11 +1341,66 @@ Date: ${formatDate(voucher.createdAt)}
                     disabled={giftLoading}
                     className="w-full h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80"
                   >
-                    {giftLoading ? 'Processing...' : '💝 Send Gift'}
+                    {giftLoading ? 'Sending...' : '💝 Send Gift'}
                   </Button>
                 </form>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* METHOD SELECTION (shown when neither tab is active) */}
+            {!giftPaymentMethod && !billingInfo && (
+              <div className="bg-white rounded-2xl p-4 border border-slate-200/50">
+                <div className="space-y-3 mb-6">
+                  <p className="text-sm font-semibold text-foreground">Choose Payment Method</p>
+                  
+                  {((user?.senderBalance || 0) > 0) && (
+                    <button
+                      onClick={() => setGiftPaymentMethod('sender-balance')}
+                      className={`w-full p-4 border-2 rounded-2xl transition text-left ${
+                        giftPaymentMethod === 'sender-balance'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-slate-200/50 hover:border-primary'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm">Preloaded Balance</p>
+                          <p className="text-lg font-bold text-primary">${((user?.senderBalance || 0) / 100).toFixed(2)}</p>
+                        </div>
+                        {giftPaymentMethod === 'sender-balance' && (
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <span className="text-white text-sm">✓</span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  )}
+
+                  {(wallet?.availableCredits || 0) > 0 && (
+                    <button
+                      onClick={() => setGiftPaymentMethod('available-credits')}
+                      className={`w-full p-4 border-2 rounded-2xl transition text-left ${
+                        giftPaymentMethod === 'available-credits'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-slate-200/50 hover:border-primary'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm">Redeemed Credits</p>
+                          <p className="text-lg font-bold text-primary">{formatCurrency(wallet?.availableCredits || 0)}</p>
+                        </div>
+                        {giftPaymentMethod === 'available-credits' && (
+                          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <span className="text-white text-sm">✓</span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
