@@ -6,6 +6,7 @@ import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { collection, query, where, getDocs, doc, getDoc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore'
 import { ensureUserRecord } from '@/lib/userSync'
+import { useTheme } from '@/context/ThemeContext'
 import { User, Voucher, Wallet } from '@/types'
 import { formatCurrency, SUPPORTED_COUNTRIES } from '@/lib/constants'
 import { usePwaPrompt } from '@/lib/usePwaPrompt'
@@ -21,7 +22,7 @@ import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, ShoppingB
 import QRScanner from '@/components/QRScanner'
 
 export default function SenderDashboard() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+  const { theme, toggleTheme } = useTheme()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
@@ -39,30 +40,6 @@ export default function SenderDashboard() {
   const [topUpAmount, setTopUpAmount] = useState('')
   const [topUpLoading, setTopUpLoading] = useState(false)
   const [showScannerModal, setShowScannerModal] = useState(false)
-
-  // Initialize theme from localStorage, default to dark
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
-    const initialTheme = savedTheme || 'dark'
-    setTheme(initialTheme)
-    applyTheme(initialTheme)
-  }, [])
-
-  const applyTheme = (themeMode: 'light' | 'dark') => {
-    const htmlElement = document.documentElement
-    if (themeMode === 'dark') {
-      htmlElement.classList.add('dark')
-    } else {
-      htmlElement.classList.remove('dark')
-    }
-  }
-
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light'
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    applyTheme(newTheme)
-  }
 
   // Helper: convert ZAR to USD
   const convertZarToUsd = (zarCents: number): number => {

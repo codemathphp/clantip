@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, doc, getDoc, onSnapshot, setDoc, upd
 import { ensureUserRecord } from '@/lib/userSync'
 import { usePwaPrompt } from '@/lib/usePwaPrompt'
 import { createNotification } from '@/lib/createNotification'
+import { useTheme } from '@/context/ThemeContext'
 import { User, Voucher, Wallet, Redemption } from '@/types'
 import { formatCurrency, SA_BANKS, SUPPORTED_COUNTRIES } from '@/lib/constants'
 import { Button } from '@/components/ui/button'
@@ -17,9 +18,10 @@ import { Label } from '@/components/ui/label'
 import { NotificationCenter } from '@/components/NotificationCenter'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
-import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, Wallet as WalletIcon, ArrowRightLeft, QrCode } from 'lucide-react'
+import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, Wallet as WalletIcon, ArrowRightLeft, QrCode, Sun, Moon } from 'lucide-react'
 
 export default function RecipientDashboard() {
+  const { theme, toggleTheme } = useTheme()
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [wallet, setWallet] = useState<Wallet | null>(null)
@@ -581,8 +583,8 @@ Date: ${formatDate(voucher.createdAt)}
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 dark:border-slate-700/50">
         <div className="px-4 py-3 flex items-center justify-between max-w-2xl mx-auto">
           <div className="relative w-32 h-10">
             <Image
@@ -596,7 +598,7 @@ Date: ${formatDate(voucher.createdAt)}
             <NotificationCenter />
             <button
               onClick={() => setShowDrawer(!showDrawer)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
             >
               {showDrawer ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -606,7 +608,7 @@ Date: ${formatDate(voucher.createdAt)}
 
       {needsPhone && (
         <div className="max-w-2xl mx-auto px-4 py-2">
-          <div className="rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 flex items-center justify-between">
+          <div className="rounded-md bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 px-4 py-2 flex items-center justify-between">
             <div className="text-sm">Your account is missing a mobile number. Add it to receive gifts.</div>
             <div>
               <Button size="sm" onClick={() => router.push('/auth')}>Add Phone</Button>
@@ -617,7 +619,7 @@ Date: ${formatDate(voucher.createdAt)}
 
       {showPwaPrompt && (
         <div className="max-w-2xl mx-auto px-4 py-2">
-          <div className="rounded-md bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 flex items-center justify-between">
+          <div className="rounded-md bg-blue-50 dark:bg-blue-950/20 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-300 px-4 py-2 flex items-center justify-between">
             <div className="text-sm">Install ClanTip on your device for quick access and offline support.</div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handlePwaInstall} className="rounded-md bg-blue-600 hover:bg-blue-700">Install</Button>
@@ -629,8 +631,8 @@ Date: ${formatDate(voucher.createdAt)}
 
       {showDrawer && (
         <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowDrawer(false)}>
-          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg animate-in slide-in-from-left" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b border-slate-200/50 flex items-center justify-between">
+          <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 shadow-lg animate-in slide-in-from-left" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-slate-200/50 dark:border-slate-700/50 dark:border-slate-700/50 flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1">
                 <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white font-bold">
                   {user?.fullName?.charAt(0).toUpperCase()}
@@ -640,7 +642,7 @@ Date: ${formatDate(voucher.createdAt)}
                   <p className="text-xs text-muted-foreground">{user?.phone}</p>
                 </div>
               </div>
-              <button onClick={() => setShowDrawer(false)} className="p-1 hover:bg-slate-100 rounded">
+              <button onClick={() => setShowDrawer(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
                 <X size={20} />
               </button>
             </div>
@@ -651,7 +653,7 @@ Date: ${formatDate(voucher.createdAt)}
                   setActiveTab('home')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left bg-slate-50 border border-slate-200"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left bg-slate-50 dark:bg-slate-800 border border-slate-200"
               >
                 <Gift size={20} />
                 <span className="text-sm font-medium">Receive Credits</span>
@@ -681,7 +683,7 @@ Date: ${formatDate(voucher.createdAt)}
                   setActiveTab('redeem')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left"
               >
                 <WalletIcon size={20} />
                 <span className="text-sm font-medium">Gifted Stream</span>
@@ -691,7 +693,7 @@ Date: ${formatDate(voucher.createdAt)}
                   setActiveTab('history')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left"
               >
                 <History size={20} />
                 <span className="text-sm font-medium">Redemption History</span>
@@ -701,10 +703,18 @@ Date: ${formatDate(voucher.createdAt)}
                   router.push('/app/settings')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left"
               >
                 <Settings size={20} />
                 <span className="text-sm font-medium">Settings</span>
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left"
+              >
+                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                <span className="text-sm font-medium">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
               </button>
             </nav>
 
@@ -752,7 +762,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'received'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white text-muted-foreground border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Received
@@ -762,7 +772,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'pending'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white text-muted-foreground border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Pending
@@ -772,14 +782,14 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'available'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white text-muted-foreground border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Available
               </button>
             </div>
 
-            <div className="rounded-2xl bg-gradient-to-br from-green-500/10 to-green-500/5 p-6 text-center border border-slate-200/50">
+            <div className="rounded-2xl bg-gradient-to-br from-green-500/10 to-green-500/5 p-6 text-center border border-slate-200/50 dark:border-slate-700/50">
               {balanceTab === 'received' && (
                 <>
                   <p className="text-xs font-medium text-muted-foreground mb-2">Total Received</p>
@@ -833,7 +843,7 @@ Date: ${formatDate(voucher.createdAt)}
               </div>
               
               {vouchers.length === 0 ? (
-                <div className="text-center py-8 bg-white rounded-2xl border border-slate-200/50">
+                <div className="text-center py-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
                   <Gift size={32} className="mx-auto text-muted-foreground/30 mb-2" />
                   <p className="text-muted-foreground text-sm">No vouchers received yet</p>
                 </div>
@@ -846,7 +856,7 @@ Date: ${formatDate(voucher.createdAt)}
                         setSelectedVoucher(voucher)
                         setActiveTab('vouchers')
                       }}
-                      className="w-full bg-white rounded-lg p-3 flex items-center justify-between hover:shadow-md transition border border-slate-100 text-left"
+                      className="w-full bg-white rounded-lg p-3 flex items-center justify-between hover:shadow-md transition border border-slate-100 dark:border-slate-700 text-left"
                     >
                       <div className="flex-1">
                         <p className="font-semibold text-sm">{formatCurrency(voucher.amount)}</p>
@@ -883,7 +893,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   vouchersTab === 'custom'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white text-muted-foreground border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Custom Gifts
@@ -896,7 +906,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   vouchersTab === 'tiny'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white text-muted-foreground border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Tiny Gifts ({tinyGifts.length})
@@ -913,8 +923,8 @@ Date: ${formatDate(voucher.createdAt)}
                   ← Back to vouchers
                 </button>
 
-                <div className="bg-white rounded-2xl p-6 border border-slate-200/50">
-                  <div className="text-center mb-6 pb-6 border-b border-slate-200/50">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50">
+                  <div className="text-center mb-6 pb-6 border-b border-slate-200/50 dark:border-slate-700/50">
                     <div className="inline-block bg-gradient-to-br from-primary/10 to-accent/10 rounded-full p-4 mb-3">
                       <Gift size={32} className="text-primary" />
                     </div>
@@ -923,37 +933,37 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
                       <span className="text-muted-foreground">Amount You Receive</span>
                       <span className="font-semibold text-lg">{formatVoucherAmount(selectedVoucher)}</span>
                     </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
                       <span className="text-muted-foreground">Voucher Code</span>
                       <span className="font-mono font-bold text-lg text-primary bg-primary/5 px-3 py-1 rounded-lg">{selectedVoucher.code}</span>
                     </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
                       <span className="text-muted-foreground">Status</span>
                       <Badge className={selectedVoucher.status === 'redeemed' || selectedVoucher.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
                         {selectedVoucher.status}
                       </Badge>
                     </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
                       <span className="text-muted-foreground">Received</span>
                       <span className="text-sm font-medium">{formatDate(selectedVoucher.createdAt)}</span>
                     </div>
 
                     {selectedVoucher.message && (
-                      <div className="py-3 border-b border-slate-100">
+                      <div className="py-3 border-b border-slate-100 dark:border-slate-700">
                         <p className="text-muted-foreground mb-2">Message</p>
                         <p className="italic text-foreground">&quot;{selectedVoucher.message}&quot;</p>
                       </div>
                     )}
 
                     <div className="pt-4">
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 rounded-xl p-4">
                         <p className="text-sm text-blue-900">
                           <span className="font-semibold">💡 Tip:</span> Save your voucher code in a safe place. You&apos;ll need it when redeeming your credits.
                         </p>
@@ -961,7 +971,7 @@ Date: ${formatDate(voucher.createdAt)}
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-slate-200/50 space-y-3">
+                  <div className="mt-6 pt-6 border-t border-slate-200/50 dark:border-slate-700/50 space-y-3">
                     {selectedVoucher.status === 'delivered' ? (
                       <>
                         <Button 
@@ -975,13 +985,13 @@ Date: ${formatDate(voucher.createdAt)}
                         </p>
                       </>
                     ) : selectedVoucher.status === 'redeemed' || selectedVoucher.status === 'paid' ? (
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 rounded-xl p-4 text-center">
                         <p className="text-sm text-green-900">
                           ✓ This voucher has been redeemed to your balance
                         </p>
                       </div>
                     ) : (
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                      <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 rounded-xl p-4 text-center">
                         <p className="text-sm text-slate-600">
                           This voucher is being processed
                         </p>
@@ -1001,7 +1011,7 @@ Date: ${formatDate(voucher.createdAt)}
               // Custom Vouchers List View
               <>
                 {vouchers.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-8 text-center border border-slate-200/50">
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
                     <Gift size={32} className="mx-auto text-muted-foreground/30 mb-3" />
                     <p className="text-muted-foreground text-sm">No custom gifts received yet</p>
                   </div>
@@ -1011,7 +1021,7 @@ Date: ${formatDate(voucher.createdAt)}
                       <button
                         key={voucher.id}
                         onClick={() => setSelectedVoucher(voucher)}
-                        className="w-full bg-white rounded-2xl p-4 border border-slate-200/50 hover:border-primary hover:shadow-md transition text-left"
+                        className="w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 hover:border-primary hover:shadow-md transition text-left"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -1047,7 +1057,7 @@ Date: ${formatDate(voucher.createdAt)}
                   {tinyGifts.filter(tg => tg.iconId === selectedTinyGiftIcon).map((tinyGift) => (
                     <div
                       key={tinyGift.id}
-                      className="w-full bg-white rounded-2xl p-4 border border-slate-200/50 flex items-center justify-between"
+                      className="w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 flex items-center justify-between"
                     >
                       <div className="flex-1">
                         <p className="font-semibold text-sm">{tinyGift.iconName}</p>
@@ -1076,7 +1086,7 @@ Date: ${formatDate(voucher.createdAt)}
               // Tiny gifts grouped by icon
               <>
                 {tinyGifts.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-8 text-center border border-slate-200/50">
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
                     <Gift size={32} className="mx-auto text-muted-foreground/30 mb-3" />
                     <p className="text-muted-foreground text-sm">No tiny gifts received yet</p>
                   </div>
@@ -1104,7 +1114,7 @@ Date: ${formatDate(voucher.createdAt)}
                       <button
                         key={group.iconId}
                         onClick={() => setSelectedTinyGiftIcon(group.iconId)}
-                        className="w-full bg-white rounded-2xl p-4 border border-slate-200/50 hover:border-primary hover:shadow-md transition text-left"
+                        className="w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 hover:border-primary hover:shadow-md transition text-left"
                       >
                         <div className="flex items-center gap-4">
                           {/* Icon on the left */}
@@ -1159,7 +1169,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   !giftPaymentMethod
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white text-muted-foreground border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Load Funds
@@ -1172,7 +1182,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   giftPaymentMethod
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white text-muted-foreground border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Send Gift
@@ -1181,7 +1191,7 @@ Date: ${formatDate(voucher.createdAt)}
 
             {/* PRELOAD FLOW */}
             {!giftPaymentMethod && (
-              <div className="bg-white rounded-2xl p-6 border border-slate-200/50 space-y-4">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50 space-y-4">
                 <div className="rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 p-4 border border-primary/20">
                   <p className="text-sm font-medium text-foreground mb-2">💳 Preload Your Wallet</p>
                   <p className="text-xs text-muted-foreground">Add funds to your account. You can immediately start showing love with your preloaded balance.</p>
@@ -1202,7 +1212,7 @@ Date: ${formatDate(voucher.createdAt)}
                       ← Edit amount
                     </button>
 
-                    <div className="rounded-2xl bg-slate-50 p-4 space-y-3 border border-slate-200">
+                    <div className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-4 space-y-3 border border-slate-200">
                       <h3 className="font-semibold text-sm">Order Summary</h3>
                       
                       <div className="flex items-center justify-between py-2 border-b border-slate-200">
@@ -1254,7 +1264,7 @@ Date: ${formatDate(voucher.createdAt)}
                           onChange={(e) => {
                             setPreloadForm({ amount: e.target.value })
                           }}
-                          className="rounded-2xl border-slate-200/50 pl-8"
+                          className="rounded-2xl border-slate-200/50 dark:border-slate-700/50 pl-8"
                           step="0.01"
                           min="1"
                           max="10000"
@@ -1277,7 +1287,7 @@ Date: ${formatDate(voucher.createdAt)}
 
             {/* GIFT SENDING FLOW */}
             {giftPaymentMethod && (
-              <div className="bg-white rounded-2xl p-4 border border-slate-200/50">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50">
                 <form onSubmit={handleSendGift} className="space-y-4">
                   <button
                     type="button"
@@ -1287,7 +1297,7 @@ Date: ${formatDate(voucher.createdAt)}
                     ← Back to payment methods
                   </button>
 
-                  <div className="rounded-2xl bg-slate-50 p-3 border border-slate-200">
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-3 border border-slate-200">
                     <p className="text-xs font-medium text-muted-foreground mb-1">Sending from</p>
                     <p className="text-sm font-semibold">{giftPaymentMethod === 'sender-balance' ? 'Preloaded Balance' : giftPaymentMethod === 'available-credits' ? 'Redeemed Credits' : 'Card Payment'}</p>
                   </div>
@@ -1302,7 +1312,7 @@ Date: ${formatDate(voucher.createdAt)}
                       onChange={(e) =>
                         setGiftForm({ ...giftForm, recipientPhone: e.target.value })
                       }
-                      className="rounded-2xl border-slate-200/50"
+                      className="rounded-2xl border-slate-200/50 dark:border-slate-700/50"
                     />
                   </div>
 
@@ -1316,7 +1326,7 @@ Date: ${formatDate(voucher.createdAt)}
                       onChange={(e) =>
                         setGiftForm({ ...giftForm, amount: e.target.value })
                       }
-                      className="rounded-2xl border-slate-200/50"
+                      className="rounded-2xl border-slate-200/50 dark:border-slate-700/50"
                       step="0.01"
                       min="0"
                     />
@@ -1332,7 +1342,7 @@ Date: ${formatDate(voucher.createdAt)}
                       onChange={(e) =>
                         setGiftForm({ ...giftForm, message: e.target.value })
                       }
-                      className="rounded-2xl border-slate-200/50"
+                      className="rounded-2xl border-slate-200/50 dark:border-slate-700/50"
                     />
                   </div>
 
@@ -1349,7 +1359,7 @@ Date: ${formatDate(voucher.createdAt)}
 
             {/* METHOD SELECTION (shown when neither tab is active) */}
             {!giftPaymentMethod && !billingInfo && (
-              <div className="bg-white rounded-2xl p-4 border border-slate-200/50">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50">
                 <div className="space-y-3 mb-6">
                   <p className="text-sm font-semibold text-foreground">Choose Payment Method</p>
                   
@@ -1359,7 +1369,7 @@ Date: ${formatDate(voucher.createdAt)}
                       className={`w-full p-4 border-2 rounded-2xl transition text-left ${
                         giftPaymentMethod === 'sender-balance'
                           ? 'border-primary bg-primary/5'
-                          : 'border-slate-200/50 hover:border-primary'
+                          : 'border-slate-200/50 dark:border-slate-700/50 hover:border-primary'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -1382,7 +1392,7 @@ Date: ${formatDate(voucher.createdAt)}
                       className={`w-full p-4 border-2 rounded-2xl transition text-left ${
                         giftPaymentMethod === 'available-credits'
                           ? 'border-primary bg-primary/5'
-                          : 'border-slate-200/50 hover:border-primary'
+                          : 'border-slate-200/50 dark:border-slate-700/50 hover:border-primary'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -1411,8 +1421,8 @@ Date: ${formatDate(voucher.createdAt)}
               <p className="text-sm text-muted-foreground">Choose your withdrawal method</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 border border-slate-200/50">
-              <div className="bg-slate-50 rounded-2xl p-4 mb-6">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50">
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mb-6">
                 <p className="text-xs text-muted-foreground">Available Balance</p>
                 <p className="text-2xl font-bold">{formatCurrency(wallet?.availableCredits || 0)}</p>
               </div>
@@ -1423,7 +1433,7 @@ Date: ${formatDate(voucher.createdAt)}
                   
                   <button
                     onClick={() => setPaymentMethod('eft')}
-                    className="w-full p-4 border-2 border-slate-200/50 rounded-2xl hover:border-primary hover:bg-primary/5 transition text-left"
+                    className="w-full p-4 border-2 border-slate-200/50 dark:border-slate-700/50 rounded-2xl hover:border-primary hover:bg-primary/5 transition text-left"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -1436,7 +1446,7 @@ Date: ${formatDate(voucher.createdAt)}
 
                   <button
                     disabled
-                    className="w-full p-4 border-2 border-slate-200/50 rounded-2xl bg-slate-50/50 opacity-50 cursor-not-allowed text-left"
+                    className="w-full p-4 border-2 border-slate-200/50 dark:border-slate-700/50 rounded-2xl bg-slate-50 dark:bg-slate-800/50 opacity-50 cursor-not-allowed text-left"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -1457,7 +1467,7 @@ Date: ${formatDate(voucher.createdAt)}
                     ← Back to methods
                   </button>
 
-                  <div className="bg-primary/5 border border-slate-200/50 rounded-2xl p-3 mb-4">
+                  <div className="bg-primary/5 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-3 mb-4">
                     <p className="text-sm font-semibold text-foreground">
                       {paymentMethod === 'eft' && 'EFT (Electronic Funds Transfer)'}
                     </p>
@@ -1473,7 +1483,7 @@ Date: ${formatDate(voucher.createdAt)}
                       onChange={(e) =>
                         setRedeemForm({ ...redeemForm, amount: e.target.value })
                       }
-                      className="rounded-2xl border-slate-200/50"
+                      className="rounded-2xl border-slate-200/50 dark:border-slate-700/50"
                     />
                   </div>
 
@@ -1481,7 +1491,7 @@ Date: ${formatDate(voucher.createdAt)}
                     <Label htmlFor="bankCode" className="text-sm font-medium">Bank Name</Label>
                     <select
                       id="bankCode"
-                      className="w-full px-3 py-2 border border-slate-200/50 rounded-2xl text-sm"
+                      className="w-full px-3 py-2 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl text-sm"
                       value={redeemForm.bankCode}
                       onChange={(e) =>
                         setRedeemForm({ ...redeemForm, bankCode: e.target.value })
@@ -1506,7 +1516,7 @@ Date: ${formatDate(voucher.createdAt)}
                       onChange={(e) =>
                         setRedeemForm({ ...redeemForm, accountNumber: e.target.value })
                       }
-                      className="rounded-2xl border-slate-200/50"
+                      className="rounded-2xl border-slate-200/50 dark:border-slate-700/50"
                     />
                   </div>
 
@@ -1520,7 +1530,7 @@ Date: ${formatDate(voucher.createdAt)}
                       onChange={(e) =>
                         setRedeemForm({ ...redeemForm, accountName: e.target.value })
                       }
-                      className="rounded-2xl border-slate-200/50"
+                      className="rounded-2xl border-slate-200/50 dark:border-slate-700/50"
                     />
                   </div>
 
@@ -1550,8 +1560,8 @@ Date: ${formatDate(voucher.createdAt)}
                   ← Back to history
                 </button>
 
-                <div className="bg-white rounded-2xl p-6 border border-slate-200/50">
-                  <div className="text-center mb-6 pb-6 border-b border-slate-200/50">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50">
+                  <div className="text-center mb-6 pb-6 border-b border-slate-200/50 dark:border-slate-700/50">
                     <div className="inline-block bg-gradient-to-br from-primary/10 to-accent/10 rounded-full p-4 mb-3">
                       <WalletIcon size={32} className="text-primary" />
                     </div>
@@ -1560,17 +1570,17 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
                       <span className="text-muted-foreground">Amount</span>
                       <span className="font-semibold text-lg">{formatCurrency(selectedRedemption.amount)}</span>
                     </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
                       <span className="text-muted-foreground">Method</span>
                       <span className="font-medium capitalize">{selectedRedemption.method.replace('_', ' ')}</span>
                     </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
                       <span className="text-muted-foreground">Status</span>
                       <Badge className={
                         selectedRedemption.status === 'paid' ? 'bg-green-100 text-green-800' :
@@ -1582,20 +1592,20 @@ Date: ${formatDate(voucher.createdAt)}
                       </Badge>
                     </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-slate-100">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
                       <span className="text-muted-foreground">Requested</span>
                       <span className="text-sm font-medium">{formatDate(selectedRedemption.createdAt)}</span>
                     </div>
 
                     {selectedRedemption.status === 'paid' && (
-                      <div className="py-3 border-b border-slate-100">
+                      <div className="py-3 border-b border-slate-100 dark:border-slate-700">
                         <span className="text-muted-foreground">Completed</span>
                         <p className="text-sm font-medium mt-1">{formatDate(selectedRedemption.updatedAt)}</p>
                       </div>
                     )}
 
                     <div className="pt-4">
-                      <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 rounded-xl p-4">
                         <p className="text-sm text-green-900">
                           <span className="font-semibold">✓ Received:</span> The funds have been transferred to your {selectedRedemption.method.replace('_', ' ')} account.
                         </p>
@@ -1603,7 +1613,7 @@ Date: ${formatDate(voucher.createdAt)}
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-6 border-t border-slate-200/50">
+                  <div className="mt-6 pt-6 border-t border-slate-200/50 dark:border-slate-700/50">
                     <Button 
                       onClick={() => handleShareReceipt(selectedRedemption as any)}
                       className="w-full h-12 rounded-2xl"
@@ -1617,7 +1627,7 @@ Date: ${formatDate(voucher.createdAt)}
               // List View
               <>
                 {redemptions.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-8 text-center border border-slate-200/50">
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
                     <History size={32} className="mx-auto text-muted-foreground/30 mb-3" />
                     <p className="text-muted-foreground text-sm">No redemptions yet</p>
                   </div>
@@ -1627,7 +1637,7 @@ Date: ${formatDate(voucher.createdAt)}
                       <button
                         key={redemption.id}
                         onClick={() => setSelectedRedemption(redemption)}
-                        className="w-full bg-white rounded-2xl p-4 border border-slate-200/50 hover:border-primary hover:shadow-md transition text-left"
+                        className="w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 hover:border-primary hover:shadow-md transition text-left"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -1657,13 +1667,13 @@ Date: ${formatDate(voucher.createdAt)}
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/50 z-20">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-700/50 z-20">
         <div className="flex items-center justify-around max-w-2xl mx-auto px-4">
           <button
             onClick={() => setActiveTab('home')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'home'
-                ? 'bg-orange-100 text-orange-600'
+                ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1674,7 +1684,7 @@ Date: ${formatDate(voucher.createdAt)}
             onClick={() => setActiveTab('vouchers')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'vouchers'
-                ? 'bg-orange-100 text-orange-600'
+                ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1685,7 +1695,7 @@ Date: ${formatDate(voucher.createdAt)}
             onClick={() => setActiveTab('redeem')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'redeem'
-                ? 'bg-orange-100 text-orange-600'
+                ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1696,7 +1706,7 @@ Date: ${formatDate(voucher.createdAt)}
             onClick={() => setActiveTab('history')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'history'
-                ? 'bg-orange-100 text-orange-600'
+                ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1715,3 +1725,10 @@ Date: ${formatDate(voucher.createdAt)}
     </div>
   )
 }
+
+
+
+
+
+
+
