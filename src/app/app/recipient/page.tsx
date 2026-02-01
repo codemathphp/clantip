@@ -1314,9 +1314,9 @@ Date: ${formatDate(voucher.createdAt)}
         <div className="flex items-center justify-around max-w-2xl mx-auto px-4">
           <button
             onClick={() => setActiveTab('home')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition ${
+            className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'home'
-                ? 'text-primary'
+                ? 'bg-orange-100 text-orange-600'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1325,9 +1325,9 @@ Date: ${formatDate(voucher.createdAt)}
           </button>
           <button
             onClick={() => setActiveTab('vouchers')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition ${
+            className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'vouchers'
-                ? 'text-primary'
+                ? 'bg-orange-100 text-orange-600'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1336,9 +1336,9 @@ Date: ${formatDate(voucher.createdAt)}
           </button>
           <button
             onClick={() => setActiveTab('redeem')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition ${
+            className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'redeem'
-                ? 'text-primary'
+                ? 'bg-orange-100 text-orange-600'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1347,9 +1347,9 @@ Date: ${formatDate(voucher.createdAt)}
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition ${
+            className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'history'
-                ? 'text-primary'
+                ? 'bg-orange-100 text-orange-600'
                 : 'text-muted-foreground'
             }`}
           >

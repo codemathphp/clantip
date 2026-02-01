@@ -155,6 +155,17 @@ export default function IconStorePage() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Info Banner */}
+        <div className="mb-8 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 p-6 border border-primary/20">
+          <h2 className="text-xl font-bold mb-2">💝 Spread Love Across the World</h2>
+          <p className="text-sm text-muted-foreground mb-3">
+            Send a heartfelt quick gift attached to value for value. Every gift carries your appreciation.
+          </p>
+          <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 inline-block">
+            ⚡ Only your preloaded balance works in this section
+          </p>
+        </div>
+
         {/* Send Love Bottom Drawer */}
         {selectedIcon && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">

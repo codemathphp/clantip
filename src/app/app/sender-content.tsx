@@ -17,10 +17,11 @@ import { Label } from '@/components/ui/label'
 import { NotificationCenter } from '@/components/NotificationCenter'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
-import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, ShoppingBag, Wallet as WalletIcon, ArrowRightLeft, QrCode } from 'lucide-react'
+import { Menu, X, Home, Gift, History, Settings, LogOut, ChevronRight, ShoppingBag, Wallet as WalletIcon, ArrowRightLeft, QrCode, Moon, Sun } from 'lucide-react'
 import QRScanner from '@/components/QRScanner'
 
 export default function SenderDashboard() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
   const router = useRouter()
   const searchParams = useSearchParams()
   const [user, setUser] = useState<User | null>(null)
@@ -38,6 +39,30 @@ export default function SenderDashboard() {
   const [topUpAmount, setTopUpAmount] = useState('')
   const [topUpLoading, setTopUpLoading] = useState(false)
   const [showScannerModal, setShowScannerModal] = useState(false)
+
+  // Initialize theme from localStorage, default to dark
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null
+    const initialTheme = savedTheme || 'dark'
+    setTheme(initialTheme)
+    applyTheme(initialTheme)
+  }, [])
+
+  const applyTheme = (themeMode: 'light' | 'dark') => {
+    const htmlElement = document.documentElement
+    if (themeMode === 'dark') {
+      htmlElement.classList.add('dark')
+    } else {
+      htmlElement.classList.remove('dark')
+    }
+  }
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light'
+    setTheme(newTheme)
+    localStorage.setItem('theme', newTheme)
+    applyTheme(newTheme)
+  }
 
   // Helper: convert ZAR to USD
   const convertZarToUsd = (zarCents: number): number => {
@@ -710,6 +735,16 @@ Recipient has been notified
                 <Gift size={20} />
                 <span className="text-sm font-medium">Tiny Gifts</span>
               </button>
+
+              <div className="my-3 border-t border-slate-200"></div>
+
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+              >
+                {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+                <span className="text-sm font-medium">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+              </button>
             </nav>
 
             <div className="absolute bottom-16 left-4 right-4">
@@ -1232,9 +1267,9 @@ Recipient has been notified
         <div className="flex items-center justify-around max-w-2xl mx-auto px-4 overflow-x-auto">
           <button
             onClick={() => setActiveTab('home')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap ${
+            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap rounded-xl mx-1 ${
               activeTab === 'home'
-                ? 'text-primary'
+                ? 'bg-orange-100 text-orange-600'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1243,9 +1278,9 @@ Recipient has been notified
           </button>
           <button
             onClick={() => setActiveTab('gift')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap ${
+            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap rounded-xl mx-1 ${
               activeTab === 'gift'
-                ? 'text-primary'
+                ? 'bg-orange-100 text-orange-600'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1254,9 +1289,9 @@ Recipient has been notified
           </button>
           <button
             onClick={() => setActiveTab('store')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap ${
+            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap rounded-xl mx-1 ${
               activeTab === 'store'
-                ? 'text-primary'
+                ? 'bg-orange-100 text-orange-600'
                 : 'text-muted-foreground'
             }`}
           >
@@ -1265,9 +1300,9 @@ Recipient has been notified
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap ${
+            className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap rounded-xl mx-1 ${
               activeTab === 'history'
-                ? 'text-primary'
+                ? 'bg-orange-100 text-orange-600'
                 : 'text-muted-foreground'
             }`}
           >
