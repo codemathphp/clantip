@@ -34,6 +34,9 @@ export default function RecipientDashboard() {
   const [paymentMethod, setPaymentMethod] = useState<'eft' | 'mobile_wallet' | null>(null)
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null)
   const [selectedRedemption, setSelectedRedemption] = useState<Redemption | null>(null)
+  const [tinyGifts, setTinyGifts] = useState<any[]>([])
+  const [vouchersTab, setVouchersTab] = useState<'custom' | 'tiny'>('custom')
+  const [selectedTinyGiftIcon, setSelectedTinyGiftIcon] = useState<string | null>(null)
   const [redeemForm, setRedeemForm] = useState({
     bankCode: '',
     accountNumber: '',
@@ -109,6 +112,17 @@ export default function RecipientDashboard() {
               const vouchersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Voucher))
               setVouchers(vouchersList)
               console.log(`🔔 [Recipient] Updated ${vouchersList.length} vouchers in real-time`)
+            })
+
+            // Set up REAL-TIME listener for tiny gifts (microgifts)
+            const tinyGiftsQuery = query(
+              collection(db, 'microgifts'),
+              where('recipientId', '==', phone)
+            )
+            onSnapshot(tinyGiftsQuery, (snapshot) => {
+              const tinyGiftsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+              setTinyGifts(tinyGiftsList)
+              console.log(`💝 [Recipient] Updated ${tinyGiftsList.length} tiny gifts in real-time`)
             })
           }
 
@@ -584,10 +598,10 @@ Date: ${formatDate(voucher.createdAt)}
                   setActiveTab('redeem')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-slate-100 transition text-left"
               >
                 <WalletIcon size={20} />
-                <span className="text-sm font-medium">Redeem Funds</span>
+                <span className="text-sm font-medium">Gifted Stream</span>
               </button>
               <button
                 onClick={() => {
@@ -773,11 +787,41 @@ Date: ${formatDate(voucher.createdAt)}
           <div className="space-y-4 animate-in fade-in">
             <div>
               <h1 className="text-2xl font-bold mb-1">My Vouchers</h1>
-              <p className="text-sm text-muted-foreground">All vouchers received</p>
+              <p className="text-sm text-muted-foreground">All gifts received</p>
             </div>
 
-            {selectedVoucher ? (
-              // Receipt View
+            {/* Tabs for Custom vs Tiny Gifts */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => {
+                  setVouchersTab('custom')
+                  setSelectedVoucher(null)
+                }}
+                className={`px-4 py-2 rounded-full font-medium transition ${
+                  vouchersTab === 'custom'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                }`}
+              >
+                Custom Gifts
+              </button>
+              <button
+                onClick={() => {
+                  setVouchersTab('tiny')
+                  setSelectedTinyGiftIcon(null)
+                }}
+                className={`px-4 py-2 rounded-full font-medium transition ${
+                  vouchersTab === 'tiny'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                }`}
+              >
+                Tiny Gifts ({tinyGifts.length})
+              </button>
+            </div>
+
+            {vouchersTab === 'custom' && selectedVoucher ? (
+              // Custom Voucher Receipt View
               <div className="space-y-4">
                 <button
                   onClick={() => setSelectedVoucher(null)}
@@ -870,13 +914,13 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
                 </div>
               </div>
-            ) : (
-              // List View
+            ) : vouchersTab === 'custom' ? (
+              // Custom Vouchers List View
               <>
                 {vouchers.length === 0 ? (
                   <div className="bg-white rounded-2xl p-8 text-center border border-slate-200/50">
                     <Gift size={32} className="mx-auto text-muted-foreground/30 mb-3" />
-                    <p className="text-muted-foreground text-sm">No vouchers received yet</p>
+                    <p className="text-muted-foreground text-sm">No custom gifts received yet</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -901,6 +945,109 @@ Date: ${formatDate(voucher.createdAt)}
                             <p className="text-xs text-muted-foreground mt-1">{formatDate(voucher.createdAt)}</p>
                           </div>
                           <ChevronRight size={20} className="text-muted-foreground flex-shrink-0 ml-2" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : selectedTinyGiftIcon ? (
+              // Tiny gifts list for selected icon
+              <div className="space-y-4">
+                <button
+                  onClick={() => setSelectedTinyGiftIcon(null)}
+                  className="text-sm text-primary flex items-center gap-1 hover:underline"
+                >
+                  ← Back to icons
+                </button>
+                <div className="space-y-3">
+                  {tinyGifts.filter(tg => tg.iconId === selectedTinyGiftIcon).map((tinyGift) => (
+                    <div
+                      key={tinyGift.id}
+                      className="w-full bg-white rounded-2xl p-4 border border-slate-200/50 flex items-center justify-between"
+                    >
+                      <div className="flex-1">
+                        <p className="font-semibold text-sm">{tinyGift.iconName}</p>
+                        <p className="text-xs text-muted-foreground">${(tinyGift.amount / 100).toFixed(2)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">from {tinyGift.senderName || 'Someone'}</p>
+                      </div>
+                      <Badge className={tinyGift.status === 'redeemed' || tinyGift.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                        {tinyGift.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  onClick={() => {
+                    const unredeemed = tinyGifts.filter(tg => tg.iconId === selectedTinyGiftIcon && (tg.status === 'delivered' || tg.status === 'pending'))
+                    if (unredeemed.length > 0) {
+                      toast.success(`Redeemed ${unredeemed.length} tiny gifts!`)
+                    }
+                  }}
+                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-green-500 to-green-600"
+                >
+                  Redeem All for This Icon
+                </Button>
+              </div>
+            ) : (
+              // Tiny gifts grouped by icon
+              <>
+                {tinyGifts.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-8 text-center border border-slate-200/50">
+                    <Gift size={32} className="mx-auto text-muted-foreground/30 mb-3" />
+                    <p className="text-muted-foreground text-sm">No tiny gifts received yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Array.from(
+                      new Map(
+                        tinyGifts.map((tg) => [
+                          tg.iconId,
+                          {
+                            iconId: tg.iconId,
+                            iconName: tg.iconName,
+                            lottieUrl: tg.lottieUrl,
+                            total: tinyGifts
+                              .filter((x) => x.iconId === tg.iconId)
+                              .reduce((sum, x) => sum + x.amount, 0),
+                            count: tinyGifts.filter((x) => x.iconId === tg.iconId).length,
+                            unredeemed: tinyGifts.filter(
+                              (x) => x.iconId === tg.iconId && (x.status === 'delivered' || x.status === 'pending')
+                            ).length,
+                          },
+                        ])
+                      ).values()
+                    ).map((group) => (
+                      <button
+                        key={group.iconId}
+                        onClick={() => setSelectedTinyGiftIcon(group.iconId)}
+                        className="w-full bg-white rounded-2xl p-4 border border-slate-200/50 hover:border-primary hover:shadow-md transition text-left"
+                      >
+                        <div className="flex items-center gap-4">
+                          {/* Icon on the left */}
+                          <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center bg-primary/5 rounded-lg">
+                            <span className="text-2xl">💝</span>
+                          </div>
+
+                          {/* Middle: icon info */}
+                          <div className="flex-1 text-left">
+                            <p className="font-semibold text-sm">{group.iconName}</p>
+                            <p className="text-xs text-muted-foreground">${(group.total / 100).toFixed(2)} total</p>
+                            <p className="text-xs text-muted-foreground">{group.count} gifts</p>
+                          </div>
+
+                          {/* Right: redeem button */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-shrink-0 rounded-lg text-xs h-10"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedTinyGiftIcon(group.iconId)
+                            }}
+                          >
+                            {group.unredeemed} Redeem
+                          </Button>
                         </div>
                       </button>
                     ))}
