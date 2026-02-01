@@ -817,18 +817,18 @@ Date: ${formatDate(voucher.createdAt)}
             <div className="grid grid-cols-2 gap-3 mt-6">
               <Button
                 onClick={() => setActiveTab('vouchers')}
-                className="bg-gradient-to-r from-primary to-primary/80 h-14 text-base text-primary-foreground"
+                className="bg-gradient-to-r from-primary to-primary/80 h-14 text-base text-primary-foreground rounded-2xl"
               >
                 <Gift className="mr-2" size={20} />
                 View Gifts
               </Button>
               <Button
-                onClick={() => setActiveTab('redeem')}
+                onClick={() => router.push('/app/gift-stream')}
                 variant="outline"
-                className="h-14 text-base dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700"
+                className="h-14 text-base rounded-2xl dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700"
               >
                 <WalletIcon className="mr-2" size={20} />
-                Redeem
+                Gift Stream
               </Button>
             </div>
 
