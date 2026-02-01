@@ -1,28 +1,20 @@
-import PreloadCallbackClient from './PreloadCallbackClient'
-
-type Props = {
-  searchParams?: { [key: string]: string | string[] | undefined }
-}
-
-export default function Page({ searchParams }: Props) {
-  const reference = Array.isArray(searchParams?.reference) ? searchParams?.reference[0] : searchParams?.reference
-  return <PreloadCallbackClient reference={reference ?? null} />
-}
-'use client'
+"use client"
 
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { doc, updateDoc, getDoc, Timestamp, collection, addDoc } from 'firebase/firestore'
 import toast from 'react-hot-toast'
 
-export default function PreloadCallbackPage() {
+type Props = {
+  reference?: string | null
+}
+
+export default function PreloadCallbackClient({ reference }: Props) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [verifying, setVerifying] = useState(true)
   const [success, setSuccess] = useState(false)
-  const reference = searchParams.get('reference')
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (authUser: any) => {
@@ -48,44 +40,44 @@ export default function PreloadCallbackPage() {
 
         if (result.success && result.data.status === 'success') {
           console.log('✅ Preload payment verified successfully')
-          
+
           // Get preload data from sessionStorage
           const preloadData = sessionStorage.getItem('pendingPreload')
           if (preloadData) {
             const data = JSON.parse(preloadData)
-            
+
             try {
               // Get user's wallet document by phone
               const userRef = doc(db, 'users', authUser.uid)
               const userSnap = await getDoc(userRef)
-              
+
               if (userSnap.exists()) {
                 const userData = userSnap.data()
                 const userPhone = userData.phone || userData.phoneE164 || authUser.phoneNumber
-                
+
                 if (userPhone) {
                   // Update wallet - add funds to senderBalance (for recipients to send gifts)
                   const walletRef = doc(db, 'wallets', userPhone)
-                  
+
                   // Amount in kobo (cents) from Paystack
                   const amountInKobo = result.data?.amount || null
                   const amountToAdd = amountInKobo !== null ? amountInKobo / 100 : (data.baseAmount || 0)
-                  
+
                   console.log(`💰 Adding ${amountToAdd} USD to wallet for ${userPhone}`)
-                  
+
                   // Get existing wallet
                   const walletSnap = await getDoc(walletRef)
                   const existingBalance = walletSnap.exists() ? (walletSnap.data().senderBalance || 0) : 0
-                  
+
                   // Update wallet with new balance
                   await updateDoc(walletRef, {
                     senderBalance: existingBalance + Math.round(amountToAdd * 100), // Store in cents
                     lastPreloadDate: Timestamp.now(),
                     updatedAt: Timestamp.now(),
                   })
-                  
+
                   console.log('✓ Wallet updated successfully')
-                  
+
                   // Create preload transaction record for history
                   const transactionRef = await addDoc(collection(db, 'preloadTransactions'), {
                     userId: authUser.uid,
@@ -97,9 +89,9 @@ export default function PreloadCallbackPage() {
                     status: 'completed',
                     createdAt: Timestamp.now(),
                   })
-                  
+
                   console.log('✓ Preload transaction record created:', transactionRef.id)
-                  
+
                   // Create notification for successful preload
                   try {
                     await addDoc(collection(db, 'notifications'), {
@@ -116,12 +108,12 @@ export default function PreloadCallbackPage() {
                     console.error('Warning: Failed to create notification:', notifError)
                     // Don't fail the preload if notification fails
                   }
-                  
+
                   // Clear sessionStorage
                   sessionStorage.removeItem('pendingPreload')
-                  
+
                   setSuccess(true)
-                  
+
                   // Show success and redirect
                   toast.success(`✅ Wallet loaded with $${amountToAdd.toFixed(2)}! You can now send gifts.`)
                   setTimeout(() => {
