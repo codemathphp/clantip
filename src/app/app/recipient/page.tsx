@@ -710,8 +710,9 @@ Date: ${formatDate(voucher.createdAt)}
               </button>
 
               <button
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
+                onClick={(e) => e.preventDefault()}
+                aria-disabled="true"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg opacity-60 cursor-not-allowed transition text-left dark:text-slate-100"
               >
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 <span className="text-sm font-medium dark:text-slate-100">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
@@ -843,7 +844,7 @@ Date: ${formatDate(voucher.createdAt)}
               </div>
               
               {vouchers.length === 0 ? (
-                <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                <div className="text-center py-8 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
                   <Gift size={32} className="mx-auto text-muted-foreground/30 mb-2" />
                   <p className="text-muted-foreground text-sm">No vouchers received yet</p>
                 </div>
@@ -856,7 +857,7 @@ Date: ${formatDate(voucher.createdAt)}
                         setSelectedVoucher(voucher)
                         setActiveTab('vouchers')
                       }}
-                      className="w-full bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg p-3 flex items-center justify-between hover:shadow-md transition border border-slate-100 dark:border-slate-700 text-left"
+                      className="w-full bg-slate-50 dark:bg-slate-900 dark:text-slate-100 rounded-lg p-3 flex items-center justify-between hover:shadow-md transition border border-slate-100 dark:border-slate-700 text-left"
                     >
                       <div className="flex-1">
                         <p className="font-semibold text-sm">{formatCurrency(voucher.amount)}</p>
@@ -923,7 +924,7 @@ Date: ${formatDate(voucher.createdAt)}
                   ← Back to vouchers
                 </button>
 
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50">
+                <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50">
                   <div className="text-center mb-6 pb-6 border-b border-slate-200/50 dark:border-slate-700/50">
                     <div className="inline-block bg-gradient-to-br from-primary/10 to-accent/10 rounded-full p-4 mb-3">
                       <Gift size={32} className="text-primary" />
@@ -1011,7 +1012,7 @@ Date: ${formatDate(voucher.createdAt)}
               // Custom Vouchers List View
               <>
                 {vouchers.length === 0 ? (
-                  <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
+                  <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
                     <Gift size={32} className="mx-auto text-muted-foreground/30 mb-3" />
                     <p className="text-muted-foreground text-sm">No custom gifts received yet</p>
                   </div>
@@ -1021,7 +1022,7 @@ Date: ${formatDate(voucher.createdAt)}
                       <button
                         key={voucher.id}
                         onClick={() => setSelectedVoucher(voucher)}
-                        className="w-full bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-900/50 dark:border-slate-700/50 hover:border-primary hover:shadow-md transition text-left"
+                        className="w-full bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-900/50 dark:border-slate-700/50 hover:border-primary hover:shadow-md transition text-left"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -1057,7 +1058,7 @@ Date: ${formatDate(voucher.createdAt)}
                   {tinyGifts.filter(tg => tg.iconId === selectedTinyGiftIcon).map((tinyGift) => (
                     <div
                       key={tinyGift.id}
-                      className="w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 flex items-center justify-between"
+                      className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 flex items-center justify-between"
                     >
                       <div className="flex-1">
                         <p className="font-semibold text-sm">{tinyGift.iconName}</p>
@@ -1086,7 +1087,7 @@ Date: ${formatDate(voucher.createdAt)}
               // Tiny gifts grouped by icon
               <>
                 {tinyGifts.length === 0 ? (
-                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
+                    <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
                     <Gift size={32} className="mx-auto text-muted-foreground/30 mb-3" />
                     <p className="text-muted-foreground text-sm">No tiny gifts received yet</p>
                   </div>
