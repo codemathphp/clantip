@@ -570,8 +570,8 @@ Recipient has been notified
   const redeemedAmountUSD = getTotalInUSD(vouchers.filter(v => v.status === 'paid'))
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
+      <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50">
         <div className="px-4 py-3 flex items-center justify-between max-w-2xl mx-auto">
           <div className="relative w-32 h-10">
             <Image
@@ -592,7 +592,7 @@ Recipient has been notified
             </div>
             <button
               onClick={() => setShowDrawer(!showDrawer)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition dark:text-slate-100"
             >
               {showDrawer ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -602,7 +602,7 @@ Recipient has been notified
 
       {needsPhone && (
         <div className="max-w-2xl mx-auto px-4 py-2">
-          <div className="rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-2 flex items-center justify-between">
+          <div className="rounded-md bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-100 px-4 py-2 flex items-center justify-between">
             <div className="text-sm">Your account is missing a mobile number. Add it to receive gifts.</div>
             <div>
               <Button size="sm" onClick={() => router.push('/auth')}>Add Phone</Button>
@@ -613,7 +613,7 @@ Recipient has been notified
 
       {showPwaPrompt && (
         <div className="max-w-2xl mx-auto px-4 py-2">
-          <div className="rounded-md bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 flex items-center justify-between">
+          <div className="rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-100 px-4 py-2 flex items-center justify-between">
             <div className="text-sm">Install ClanTip on your device for quick access and offline support.</div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handlePwaInstall} className="rounded-md bg-blue-600 hover:bg-blue-700">Install</Button>
@@ -625,18 +625,18 @@ Recipient has been notified
 
       {showDrawer && (
         <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setShowDrawer(false)}>
-          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg animate-in slide-in-from-left" onClick={(e) => e.stopPropagation()}>
-            <div className="p-4 border-b border-slate-200/50 flex items-center justify-between">
+          <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 shadow-lg animate-in slide-in-from-left" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-slate-200/50 dark:border-slate-700 flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1">
                 <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center text-white font-bold">
                   {user?.fullName?.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">{user?.fullName}</p>
-                  <p className="text-xs text-muted-foreground">{user?.phone}</p>
+                  <p className="font-semibold text-sm dark:text-slate-100">{user?.fullName}</p>
+                  <p className="text-xs text-muted-foreground dark:text-slate-400">{user?.phone}</p>
                 </div>
               </div>
-              <button onClick={() => setShowDrawer(false)} className="p-1 hover:bg-slate-100 rounded">
+              <button onClick={() => setShowDrawer(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded dark:text-slate-100">
                 <X size={20} />
               </button>
             </div>
@@ -647,14 +647,14 @@ Recipient has been notified
                   setActiveTab('home')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <Home size={20} />
                 <span className="text-sm font-medium">Send Credits</span>
               </button>
               <button
                 onClick={() => router.push('/app/recipient')}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left bg-slate-50 border border-slate-200"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-100"
               >
                 <Gift size={20} />
                 <span className="text-sm font-medium">Receive Credits</span>
@@ -667,7 +667,7 @@ Recipient has been notified
                   setActiveTab('gift')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <Gift size={20} />
                 <span className="text-sm font-medium">Send Custom Gift</span>
@@ -677,7 +677,7 @@ Recipient has been notified
                   setActiveTab('store')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <ShoppingBag size={20} />
                 <span className="text-sm font-medium">Ready Made</span>
@@ -687,7 +687,7 @@ Recipient has been notified
                   setActiveTab('history')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <History size={20} />
                 <span className="text-sm font-medium">My Gifts</span>
@@ -697,7 +697,7 @@ Recipient has been notified
                     router.push('/app/settings')
                     setShowDrawer(false)
                   }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <Settings size={20} />
                 <span className="text-sm font-medium">Settings</span>
@@ -707,17 +707,17 @@ Recipient has been notified
                     router.push('/app/icon-store')
                     setShowDrawer(false)
                   }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <Gift size={20} />
                 <span className="text-sm font-medium">Tiny Gifts</span>
               </button>
 
-              <div className="my-3 border-t border-slate-200"></div>
+              <div className="my-3 border-t border-slate-200 dark:border-slate-700"></div>
 
               <button
                 onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                 <span className="text-sm font-medium">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
@@ -777,23 +777,23 @@ Recipient has been notified
         {activeTab === 'home' && (
           <div className="space-y-4 animate-in fade-in">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold">Hi, {user?.fullName}! 👋</h1>
-              <p className="text-sm text-muted-foreground">Send credits and manage your gifts</p>
+              <h1 className="text-2xl font-bold dark:text-slate-100">Hi, {user?.fullName}! 👋</h1>
+              <p className="text-sm text-muted-foreground dark:text-slate-400">Send credits and manage your gifts</p>
             </div>
 
             {/* Balance Display Card */}
-            <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 border border-slate-200/50">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Available Balance</p>
-              <p className="text-4xl font-bold mb-3">${getTotalBalanceUsd().toFixed(2)}</p>
-              <p className="text-xs italic text-muted-foreground -mt-1">Worth Of Love Credit</p>
+            <div className="bg-gradient-to-br from-primary/10 to-accent/10 dark:from-slate-800 dark:to-slate-800/50 rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700">
+              <p className="text-xs font-medium text-muted-foreground dark:text-slate-400 mb-2">Available Balance</p>
+              <p className="text-4xl font-bold dark:text-slate-100 mb-3">${getTotalBalanceUsd().toFixed(2)}</p>
+              <p className="text-xs italic text-muted-foreground dark:text-slate-400 -mt-1">Worth Of Love Credit</p>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <p className="text-muted-foreground text-xs">Preloaded</p>
-                  <p className="font-semibold">${((user?.senderBalance || 0) / 100).toFixed(2)}</p>
+                  <p className="text-muted-foreground dark:text-slate-400 text-xs">Preloaded</p>
+                  <p className="font-semibold dark:text-slate-100">${((user?.senderBalance || 0) / 100).toFixed(2)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">From Credits</p>
-                  <p className="font-semibold">${convertZarToUsd(wallet?.availableCredits || 0).toFixed(2)}</p>
+                  <p className="text-muted-foreground dark:text-slate-400 text-xs">From Credits</p>
+                  <p className="font-semibold dark:text-slate-100">${convertZarToUsd(wallet?.availableCredits || 0).toFixed(2)}</p>
                 </div>
               </div>
               <Button
@@ -812,7 +812,7 @@ Recipient has been notified
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'sent'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
                 }`}
               >
                 Sent
@@ -822,7 +822,7 @@ Recipient has been notified
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'pending'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
                 }`}
               >
                 Pending
@@ -832,33 +832,33 @@ Recipient has been notified
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'redeemed'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white text-muted-foreground border border-slate-200/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
                 }`}
               >
                 Redeemed
               </button>
             </div>
 
-            <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-6 text-center border border-slate-200/50">
+            <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 dark:from-blue-500/20 dark:to-blue-500/10 p-6 text-center border border-slate-200/50 dark:border-slate-700">
                   {balanceTab === 'sent' && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Total Sent</p>
-                      <div className="text-4xl font-bold mb-2">${Number(totalSentUSD).toFixed(2)}</div>
-                  <p className="text-sm text-muted-foreground">{vouchers.length} gifts sent</p>
+                  <p className="text-xs font-medium text-muted-foreground dark:text-slate-400 mb-2">Total Sent</p>
+                      <div className="text-4xl font-bold dark:text-slate-100 mb-2">${Number(totalSentUSD).toFixed(2)}</div>
+                  <p className="text-sm text-muted-foreground dark:text-slate-400">{vouchers.length} gifts sent</p>
                 </>
               )}
               {balanceTab === 'pending' && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Pending Redemption</p>
-                  <div className="text-4xl font-bold mb-2">${Number(pendingAmountUSD).toFixed(2)}</div>
-                  <p className="text-sm text-muted-foreground">Waiting to be redeemed</p>
+                  <p className="text-xs font-medium text-muted-foreground dark:text-slate-400 mb-2">Pending Redemption</p>
+                  <div className="text-4xl font-bold dark:text-slate-100 mb-2">${Number(pendingAmountUSD).toFixed(2)}</div>
+                  <p className="text-sm text-muted-foreground dark:text-slate-400">Waiting to be redeemed</p>
                 </>
               )}
               {balanceTab === 'redeemed' && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Successfully Redeemed</p>
-                  <div className="text-4xl font-bold mb-2">${Number(redeemedAmountUSD).toFixed(2)}</div>
-                  <p className="text-sm text-muted-foreground">Completed redemptions</p>
+                  <p className="text-xs font-medium text-muted-foreground dark:text-slate-400 mb-2">Successfully Redeemed</p>
+                  <div className="text-4xl font-bold dark:text-slate-100 mb-2">${Number(redeemedAmountUSD).toFixed(2)}</div>
+                  <p className="text-sm text-muted-foreground dark:text-slate-400">Completed redemptions</p>
                 </>
               )}
             </div>
@@ -885,7 +885,7 @@ Recipient has been notified
 
             <div className="mt-8">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-sm">Recent Gifts</h2>
+                <h2 className="font-semibold text-sm dark:text-slate-100">Recent Gifts</h2>
                 <button
                   onClick={() => setActiveTab('history')}
                   className="text-primary text-xs font-medium flex items-center gap-1"
@@ -895,9 +895,9 @@ Recipient has been notified
               </div>
               
               {vouchers.length === 0 ? (
-                <div className="text-center py-8 bg-white rounded-2xl border border-slate-200/50">
-                  <Gift size={32} className="mx-auto text-muted-foreground/30 mb-2" />
-                  <p className="text-muted-foreground text-sm">No gifts sent yet</p>
+                <div className="text-center py-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/50 dark:border-slate-700">
+                  <Gift size={32} className="mx-auto text-muted-foreground/30 dark:text-slate-600 mb-2" />
+                  <p className="text-muted-foreground dark:text-slate-400 text-sm">No gifts sent yet</p>
                   <Button
                     size="sm"
                     variant="outline"
@@ -912,12 +912,12 @@ Recipient has been notified
                   {vouchers.slice(0, 3).map((voucher) => {
                     const formatted = formatSenderVoucherAmount(voucher)
                     return (
-                      <div key={voucher.id} className="bg-white rounded-lg p-3 flex items-center justify-between">
+                      <div key={voucher.id} className="bg-white dark:bg-slate-800 rounded-lg p-3 flex items-center justify-between">
                         <div className="flex-1">
-                          <p className="font-semibold text-sm">{formatted.mainAmount}</p>
-                          <p className="text-xs text-muted-foreground">{formatted.subtitle}</p>
+                          <p className="font-semibold text-sm dark:text-slate-100">{formatted.mainAmount}</p>
+                          <p className="text-xs text-muted-foreground dark:text-slate-400">{formatted.subtitle}</p>
                           {voucher.message && (
-                            <p className="text-xs text-muted-foreground truncate">{voucher.message}</p>
+                            <p className="text-xs text-muted-foreground dark:text-slate-400 truncate">{voucher.message}</p>
                           )}
                         </div>
                         <Badge variant="outline" className="text-xs">
