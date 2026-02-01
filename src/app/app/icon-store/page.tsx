@@ -7,8 +7,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { ArrowLeft, Heart } from 'lucide-react'
+import { ArrowLeft, Heart, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import LottieIcon from '@/components/LottieIcon'
 
@@ -28,18 +27,14 @@ interface User {
   handle: string
 }
 
-const ICONS_PER_PAGE = 9
-
 export default function IconStorePage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [loveUnits, setLoveUnits] = useState(0)
   const [icons, setIcons] = useState<MicroGiftIcon[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
   const [selectedIcon, setSelectedIcon] = useState<MicroGiftIcon | null>(null)
-  const [recipientHandle, setRecipientHandle] = useState('')
-  const [message, setMessage] = useState('')
+  const [recipientInput, setRecipientInput] = useState('')
   const [sending, setSending] = useState(false)
 
   useEffect(() => {
@@ -79,13 +74,13 @@ export default function IconStorePage() {
   }, [router])
 
   const handleSendMicroGift = async () => {
-    if (!selectedIcon || !recipientHandle) {
-      toast.error('Please select an icon and enter a recipient')
+    if (!selectedIcon || !recipientInput.trim()) {
+      toast.error('Please enter recipient handle or phone')
       return
     }
 
     if (loveUnits < selectedIcon.amount) {
-      toast.error(`Insufficient Love Units. You have ${loveUnits.toFixed(2)}, need ${selectedIcon.amount.toFixed(2)}`)
+      toast.error(`Insufficient balance. Need ${selectedIcon.amount.toFixed(2)}, have ${loveUnits.toFixed(2)}`)
       return
     }
 
@@ -99,31 +94,24 @@ export default function IconStorePage() {
           iconId: selectedIcon.id,
           iconName: selectedIcon.name,
           amount: selectedIcon.amount.toString(),
-          recipientHandle: recipientHandle.trim(),
-          message: message.trim(),
+          recipientHandle: recipientInput.trim(),
+          message: '', // No message for tap-and-go
         }),
       })
 
       const json = await response.json()
       if (!response.ok) throw new Error(json.error || 'Failed to send')
 
-      toast.success(`💝 Sent! Love units: ${json.newBalance.toFixed(2)}`)
+      toast.success(`💝 Love sent! Balance: $${json.newBalance.toFixed(2)}`)
       setLoveUnits(json.newBalance)
       setSelectedIcon(null)
-      setRecipientHandle('')
-      setMessage('')
+      setRecipientInput('')
     } catch (error: any) {
-      toast.error(error.message || 'Failed to send microgift')
+      toast.error(error.message || 'Failed to send love')
     } finally {
       setSending(false)
     }
   }
-
-  // Pagination
-  const totalPages = Math.ceil(icons.length / ICONS_PER_PAGE)
-  const startIdx = (currentPage - 1) * ICONS_PER_PAGE
-  const paginatedIcons = icons.slice(startIdx, startIdx + ICONS_PER_PAGE)
-  // Show all icons in a single collection (no categories)
 
   if (loading) {
     return (
@@ -167,21 +155,22 @@ export default function IconStorePage() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Quick Gift Modal */}
+        {/* Send Love Bottom Drawer */}
         {selectedIcon && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
-            <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md p-6 space-y-4">
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-t-3xl w-full max-w-md p-6 space-y-4 animate-in slide-in-from-bottom">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Send</h2>
+                <h2 className="text-xl font-bold">Send Love</h2>
                 <button
                   onClick={() => setSelectedIcon(null)}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="p-1 hover:bg-slate-100 rounded-full transition"
                 >
-                  ✕
+                  <X size={20} />
                 </button>
               </div>
 
-              <div className="flex justify-center p-4 bg-slate-50 rounded-lg">
+              {/* Icon Preview */}
+              <div className="flex flex-col items-center gap-2">
                 <div className="w-24 h-24">
                   <LottieIcon
                     src={selectedIcon.lottieUrl}
@@ -189,73 +178,50 @@ export default function IconStorePage() {
                     className="w-full h-full"
                   />
                 </div>
+                <p className="text-sm text-muted-foreground">${selectedIcon.amount.toFixed(2)}</p>
               </div>
 
+              {/* Recipient Input */}
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Recipient Handle</p>
+                <label className="text-sm font-medium">To</label>
                 <Input
-                  placeholder="@username or phone"
-                  value={recipientHandle}
-                  onChange={(e) => setRecipientHandle(e.target.value)}
-                  className="border-slate-200"
+                  placeholder="@handle or phone"
+                  value={recipientInput}
+                  onChange={(e) => setRecipientInput(e.target.value)}
+                  className="border-slate-200 rounded-xl h-12 text-base"
+                  autoFocus
                 />
               </div>
 
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Message (optional)</p>
-                <Input
-                  placeholder="Add a personal touch..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="border-slate-200"
-                  maxLength={100}
-                />
-                <p className="text-xs text-muted-foreground text-right">{message.length}/100</p>
-              </div>
-
-              <div className="bg-primary/10 rounded-lg p-3">
-                <p className="text-sm font-semibold text-primary">
-                  💝 {selectedIcon.amount.toFixed(2)} Love Units
-                </p>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setSelectedIcon(null)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="flex-1 bg-primary hover:bg-primary/90"
-                  onClick={handleSendMicroGift}
-                  disabled={sending || !recipientHandle}
-                >
-                  {sending ? 'Sending...' : 'Send Love 💝'}
-                </Button>
-              </div>
+              {/* Send Button */}
+              <Button
+                className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 font-semibold text-base"
+                onClick={handleSendMicroGift}
+                disabled={sending || !recipientInput.trim()}
+              >
+                {sending ? 'Sending...' : 'Send Love 💝'}
+              </Button>
             </div>
           </div>
         )}
 
-        {/* Icons Grid - unified list (no categories) */}
-        {paginatedIcons.length === 0 ? (
+        {/* Icons Grid - All icons, no pagination */}
+        {icons.length === 0 ? (
           <div className="text-center py-12">
             <Heart size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground">No icons available</p>
+            <p className="text-muted-foreground">No love available yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-            {paginatedIcons.map((icon) => (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 pb-8">
+            {icons.map((icon) => (
               <button
                 key={icon.id}
                 onClick={() => setSelectedIcon(icon)}
                 className="group relative rounded-lg p-1 hover:shadow-2xl transition-all hover:scale-105 active:scale-95"
                 disabled={loveUnits < icon.amount}
-                aria-label={`Send ${icon.amount} units`}
+                aria-label={`Send $${icon.amount.toFixed(2)}`}
               >
-                {/* Icon Animation - larger and flush with page (no card background) */}
+                {/* Icon Animation */}
                 <div className="w-full aspect-square flex items-center justify-center">
                   <LottieIcon
                     src={icon.lottieUrl}
@@ -264,10 +230,10 @@ export default function IconStorePage() {
                   />
                 </div>
 
-                {/* Price only - centered */}
+                {/* Price */}
                 <div className="flex items-center justify-center gap-1 mt-1">
                   <Heart size={12} className="text-red-500" />
-                  <p className="text-sm font-bold text-primary">{icon.amount.toFixed(2)}</p>
+                  <p className="text-sm font-bold text-primary">${icon.amount.toFixed(2)}</p>
                 </div>
 
                 {/* Insufficient Balance Overlay */}
@@ -278,43 +244,6 @@ export default function IconStorePage() {
                 )}
               </button>
             ))}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-12">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              size="sm"
-            >
-              ← Previous
-            </Button>
-            <div className="flex gap-1">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-8 h-8 rounded text-sm font-medium transition ${
-                    currentPage === i + 1
-                      ? 'bg-primary text-white'
-                      : 'bg-white border border-slate-200 hover:bg-slate-50'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              size="sm"
-            >
-              Next →
-            </Button>
           </div>
         )}
       </main>
