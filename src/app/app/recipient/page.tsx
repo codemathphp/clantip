@@ -774,8 +774,8 @@ Date: ${formatDate(voucher.createdAt)}
                 onClick={() => setBalanceTab('received')}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'received'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Received
@@ -784,8 +784,8 @@ Date: ${formatDate(voucher.createdAt)}
                 onClick={() => setBalanceTab('pending')}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'pending'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Pending
@@ -794,8 +794,8 @@ Date: ${formatDate(voucher.createdAt)}
                 onClick={() => setBalanceTab('available')}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'available'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Available
