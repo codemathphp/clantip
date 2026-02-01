@@ -224,37 +224,43 @@ export default function IconStorePage() {
           </div>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 pb-8">
-            {icons.map((icon) => (
-              <button
-                key={icon.id}
-                onClick={() => setSelectedIcon(icon)}
-                className="group relative rounded-lg p-1 hover:shadow-2xl transition-all hover:scale-105 active:scale-95"
-                disabled={loveUnits < icon.amount}
-                aria-label={`Send $${icon.amount.toFixed(2)}`}
-              >
-                {/* Icon Animation */}
-                <div className="w-full aspect-square flex items-center justify-center">
-                  <LottieIcon
-                    src={icon.lottieUrl}
-                    themeColor="#1a9b8e"
-                    className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28"
-                  />
-                </div>
-
-                {/* Price */}
-                <div className="flex items-center justify-center gap-1 mt-1">
-                  <Heart size={12} className="text-red-500" />
-                  <p className="text-sm font-bold text-primary">${icon.amount.toFixed(2)}</p>
-                </div>
-
-                {/* Insufficient Balance Overlay */}
-                {loveUnits < icon.amount && (
-                  <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center">
-                    <p className="text-white text-xs font-semibold">Insufficient</p>
+            {icons.map((icon) => {
+              const hasBalance = loveUnits >= icon.amount
+              return (
+                <button
+                  key={icon.id}
+                  onClick={() => hasBalance && setSelectedIcon(icon)}
+                  className={`group relative rounded-lg p-1 transition-all ${
+                    hasBalance
+                      ? 'hover:shadow-2xl hover:scale-105 active:scale-95 cursor-pointer'
+                      : 'opacity-40 cursor-not-allowed'
+                  }`}
+                  disabled={!hasBalance}
+                  aria-label={`Send $${icon.amount.toFixed(2)}${!hasBalance ? ' (insufficient balance)' : ''}`}
+                >
+                  {/* Icon Animation */}
+                  <div className={`w-full aspect-square flex items-center justify-center transition-all ${
+                    !hasBalance ? 'grayscale' : 'grayscale-0'
+                  }`}>
+                    <LottieIcon
+                      src={icon.lottieUrl}
+                      themeColor={hasBalance ? '#1a9b8e' : '#9ca3af'}
+                      className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28"
+                    />
                   </div>
-                )}
-              </button>
-            ))}
+
+                  {/* Price */}
+                  <div className={`flex items-center justify-center gap-1 mt-1 transition-colors ${
+                    hasBalance ? '' : 'opacity-60'
+                  }`}>
+                    <Heart size={12} className={hasBalance ? 'text-red-500' : 'text-slate-400'} />
+                    <p className={`text-sm font-bold ${hasBalance ? 'text-primary' : 'text-slate-400'}`}>
+                      ${icon.amount.toFixed(2)}
+                    </p>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         )}
       </main>
