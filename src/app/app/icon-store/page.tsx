@@ -141,12 +141,11 @@ export default function IconStorePage() {
               <ArrowLeft size={20} />
             </Button>
             <h1 className="text-lg font-semibold flex items-center gap-2">
-              <Heart className="text-red-500" size={22} />
               Tap and Send
             </h1>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-bold text-primary">{(isNaN(loveUnits) ? 0 : loveUnits).toFixed(2)}</p>
+            <p className="text-2xl font-bold text-primary">{(isNaN(loveUnits) ? 0 : loveUnits).toFixed(2)}</p>
           </div>
         </div>
       </header>
@@ -155,7 +154,7 @@ export default function IconStorePage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Info Banner */}
         <div className="mb-8 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 p-6 border border-primary/20">
-          <h2 className="text-xl font-bold mb-2">💝 Spread Love Across the World</h2>
+          <h2 className="text-xl font-bold mb-2">Appreciate Your People</h2>
           <p className="text-sm text-muted-foreground mb-3">
             Send a heartfelt quick gift attached to value for value. Every gift carries your appreciation.
           </p>
