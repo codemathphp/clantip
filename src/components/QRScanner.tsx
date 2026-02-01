@@ -125,7 +125,7 @@ export default function QRScanner({ onDetected, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="relative w-full max-w-md rounded-xl bg-white overflow-hidden">
+      <div className="relative w-full max-w-md rounded-xl bg-white dark:bg-slate-900 overflow-hidden">
         <div className="flex items-center justify-between p-3 border-b">
           <h3 className="font-semibold">Scanning to send love</h3>
           <button onClick={onClose} className="p-1">
@@ -166,7 +166,7 @@ export default function QRScanner({ onDetected, onClose }: Props) {
                   </>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mt-2">Point your camera at a ClanTip QR code</p>
+              <p className="text-sm text-muted-foreground dark:text-slate-300 mt-2">Point your camera at a ClanTip QR code</p>
             </>
           )}
         </div>

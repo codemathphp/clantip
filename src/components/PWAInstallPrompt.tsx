@@ -60,14 +60,14 @@ export function PWAInstallPrompt() {
   }
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 bg-white rounded-2xl shadow-xl border border-slate-200/50 p-4 z-40 md:left-auto md:right-4 md:w-80 animate-in slide-in-from-bottom">
+    <div className="fixed bottom-20 left-4 right-4 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-4 z-40 md:left-auto md:right-4 md:w-80 animate-in slide-in-from-bottom">
       <div className="flex items-start gap-3">
         <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
           <Download size={20} className="text-primary" />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-sm">Install ClanTip</h3>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground dark:text-slate-300 mt-1">
             Install the app on your device for quick access and offline support
           </p>
           <div className="flex gap-2 mt-3">

@@ -11,12 +11,12 @@ export function NotificationCenter() {
   return (
     <button
       onClick={() => router.push('/app/notifications')}
-      className="relative p-2 hover:bg-slate-100 rounded-lg transition"
+      className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition text-slate-700 dark:text-slate-200"
       title="Notifications"
     >
-      <Bell size={24} />
+      <Bell size={24} className="text-current" />
       {unreadCount > 0 && (
-        <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-teal-600 rounded-full">
+        <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-teal-600 dark:bg-teal-500 rounded-full">
           {unreadCount > 99 ? '99+' : unreadCount}
         </span>
       )}

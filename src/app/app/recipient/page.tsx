@@ -792,23 +792,23 @@ Date: ${formatDate(voucher.createdAt)}
             <div className="rounded-2xl bg-gradient-to-br from-green-500/10 to-green-500/5 p-6 text-center border border-slate-200/50 dark:border-slate-700/50">
               {balanceTab === 'received' && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Total Received</p>
-                  <div className="text-4xl font-bold mb-2">{formatCurrency(vouchers.reduce((sum, v) => sum + v.amount, 0))}</div>
-                  <p className="text-sm text-muted-foreground">{vouchers.length} vouchers</p>
+                  <p className="text-xs font-medium text-muted-foreground dark:text-slate-300 mb-2">Total Received</p>
+                  <div className="text-4xl font-bold mb-2 text-slate-900 dark:text-slate-100">{formatCurrency(vouchers.reduce((sum, v) => sum + v.amount, 0))}</div>
+                  <p className="text-sm text-muted-foreground dark:text-slate-300">{vouchers.length} vouchers</p>
                 </>
               )}
               {balanceTab === 'pending' && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Pending Credits</p>
-                  <div className="text-4xl font-bold mb-2">{formatCurrency(wallet?.pendingCredits || 0)}</div>
-                  <p className="text-sm text-muted-foreground">Being processed</p>
+                  <p className="text-xs font-medium text-muted-foreground dark:text-slate-300 mb-2">Pending Credits</p>
+                  <div className="text-4xl font-bold mb-2 text-slate-900 dark:text-slate-100">{formatCurrency(wallet?.pendingCredits || 0)}</div>
+                  <p className="text-sm text-muted-foreground dark:text-slate-300">Being processed</p>
                 </>
               )}
               {balanceTab === 'available' && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Available to Redeem</p>
-                  <div className="text-4xl font-bold mb-2">{formatCurrency(wallet?.availableCredits || 0)}</div>
-                  <p className="text-sm text-muted-foreground">Ready for withdrawal</p>
+                  <p className="text-xs font-medium text-muted-foreground dark:text-slate-300 mb-2">Available to Redeem</p>
+                  <div className="text-4xl font-bold mb-2 text-slate-900 dark:text-slate-100">{formatCurrency(wallet?.availableCredits || 0)}</div>
+                  <p className="text-sm text-muted-foreground dark:text-slate-300">Ready for withdrawal</p>
                 </>
               )}
             </div>

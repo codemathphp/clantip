@@ -11,10 +11,10 @@ export interface BadgeProps
 }
 
 const badgeVariants = {
-  default: 'bg-primary text-primary-foreground hover:bg-primary/80',
-  secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-  destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/80',
-  outline: 'text-foreground',
+  default: 'bg-primary text-primary-foreground hover:bg-primary/80 dark:bg-primary/80 dark:text-primary-foreground',
+  secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-secondary/800 dark:text-secondary-foreground',
+  destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/80 dark:bg-destructive/800 dark:text-destructive-foreground',
+  outline: 'text-foreground dark:text-slate-100',
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(

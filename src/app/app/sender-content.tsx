@@ -1240,14 +1240,14 @@ Recipient has been notified
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/50 z-20">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-700/50 z-20">
         <div className="flex items-center justify-around max-w-2xl mx-auto px-4 overflow-x-auto">
           <button
             onClick={() => setActiveTab('home')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap rounded-xl mx-1 ${
               activeTab === 'home'
-                ? 'bg-orange-100 text-orange-600'
-                : 'text-muted-foreground'
+                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
+                : 'text-muted-foreground dark:text-slate-400'
             }`}
           >
             <Home size={24} />
@@ -1257,8 +1257,8 @@ Recipient has been notified
             onClick={() => setActiveTab('gift')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap rounded-xl mx-1 ${
               activeTab === 'gift'
-                ? 'bg-orange-100 text-orange-600'
-                : 'text-muted-foreground'
+                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
+                : 'text-muted-foreground dark:text-slate-400'
             }`}
           >
             <Gift size={24} />
@@ -1268,8 +1268,8 @@ Recipient has been notified
             onClick={() => setActiveTab('store')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap rounded-xl mx-1 ${
               activeTab === 'store'
-                ? 'bg-orange-100 text-orange-600'
-                : 'text-muted-foreground'
+                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
+                : 'text-muted-foreground dark:text-slate-400'
             }`}
           >
             <ShoppingBag size={24} />
@@ -1279,8 +1279,8 @@ Recipient has been notified
             onClick={() => setActiveTab('history')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition whitespace-nowrap rounded-xl mx-1 ${
               activeTab === 'history'
-                ? 'bg-orange-100 text-orange-600'
-                : 'text-muted-foreground'
+                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
+                : 'text-muted-foreground dark:text-slate-400'
             }`}
           >
             <History size={24} />
