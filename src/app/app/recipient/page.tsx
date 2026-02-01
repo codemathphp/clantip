@@ -653,17 +653,17 @@ Date: ${formatDate(voucher.createdAt)}
                   setActiveTab('home')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left bg-slate-50 dark:bg-slate-900 border border-slate-200"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
               >
                 <Gift size={20} />
-                <span className="text-sm font-medium">Receive Credits</span>
+                <span className="text-sm font-medium dark:text-slate-100">Receive Credits</span>
               </button>
               <button
                 onClick={() => router.push('/app/sender')}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <Home size={20} />
-                <span className="text-sm font-medium">Send Credits</span>
+                <span className="text-sm font-medium dark:text-slate-100">Send Credits</span>
               </button>
 
               <div className="my-3 border-t border-slate-200"></div>
@@ -673,48 +673,48 @@ Date: ${formatDate(voucher.createdAt)}
                   setActiveTab('vouchers')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <Gift size={20} />
-                <span className="text-sm font-medium">My Vouchers</span>
+                <span className="text-sm font-medium dark:text-slate-100">My Vouchers</span>
               </button>
               <button
                 onClick={() => {
                   setActiveTab('redeem')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <WalletIcon size={20} />
-                <span className="text-sm font-medium">Gifted Stream</span>
+                <span className="text-sm font-medium dark:text-slate-100">Gifted Stream</span>
               </button>
               <button
                 onClick={() => {
                   setActiveTab('history')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <History size={20} />
-                <span className="text-sm font-medium">Redemption History</span>
+                <span className="text-sm font-medium dark:text-slate-100">Redemption History</span>
               </button>
               <button
                 onClick={() => {
                   router.push('/app/settings')
                   setShowDrawer(false)
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 <Settings size={20} />
-                <span className="text-sm font-medium">Settings</span>
+                <span className="text-sm font-medium dark:text-slate-100">Settings</span>
               </button>
 
               <button
                 onClick={toggleTheme}
-                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left"
+                className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-left dark:text-slate-100"
               >
                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-                <span className="text-sm font-medium">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                <span className="text-sm font-medium dark:text-slate-100">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
               </button>
             </nav>
 
@@ -752,8 +752,8 @@ Date: ${formatDate(voucher.createdAt)}
         {activeTab === 'home' && (
           <div className="space-y-4 animate-in fade-in">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold">Hi, {user?.fullName}! 👋</h1>
-              <p className="text-sm text-muted-foreground">Manage your received credits</p>
+              <h1 className="text-2xl font-bold dark:text-slate-100">Hi, {user?.fullName}! 👋</h1>
+              <p className="text-sm text-muted-foreground dark:text-slate-400">Manage your received credits</p>
             </div>
 
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -879,8 +879,8 @@ Date: ${formatDate(voucher.createdAt)}
         {activeTab === 'vouchers' && (
           <div className="space-y-4 animate-in fade-in">
             <div>
-              <h1 className="text-2xl font-bold mb-1">My Vouchers</h1>
-              <p className="text-sm text-muted-foreground">All gifts received</p>
+              <h1 className="text-2xl font-bold dark:text-slate-100 mb-1">My Vouchers</h1>
+              <p className="text-sm text-muted-foreground dark:text-slate-400">All gifts received</p>
             </div>
 
             {/* Tabs for Custom vs Tiny Gifts */}
@@ -928,7 +928,7 @@ Date: ${formatDate(voucher.createdAt)}
                     <div className="inline-block bg-gradient-to-br from-primary/10 to-accent/10 rounded-full p-4 mb-3">
                       <Gift size={32} className="text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold mb-2">Gift Receipt</h2>
+                    <h2 className="text-2xl font-bold dark:text-slate-100 mb-2">Gift Receipt</h2>
                     <p className="text-sm text-muted-foreground">Voucher #{selectedVoucher.id.slice(0, 8)}</p>
                   </div>
 
@@ -1154,8 +1154,8 @@ Date: ${formatDate(voucher.createdAt)}
         {activeTab === 'gift' && (
           <div className="space-y-4 animate-in fade-in">
             <div>
-              <h1 className="text-2xl font-bold mb-1">Send a Gift</h1>
-              <p className="text-sm text-muted-foreground">Load funds or share your balance</p>
+              <h1 className="text-2xl font-bold dark:text-slate-100 mb-1">Send a Gift</h1>
+              <p className="text-sm text-muted-foreground dark:text-slate-400">Load funds or share your balance</p>
             </div>
 
             {/* Tabs for Preload vs Gift */}
@@ -1253,7 +1253,7 @@ Date: ${formatDate(voucher.createdAt)}
                   // AMOUNT INPUT VIEW
                   <form onSubmit={handlePreloadInitiate} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="preloadAmount" className="text-sm font-medium">Amount (USD)</Label>
+                      <Label htmlFor="preloadAmount" className="text-sm font-medium dark:text-slate-100">Amount (USD)</Label>
                       <div className="relative">
                         <span className="absolute left-4 top-3 text-muted-foreground">$</span>
                         <Input
@@ -1303,7 +1303,7 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="recipientPhone" className="text-sm font-medium">Recipient Phone or Handle</Label>
+                    <Label htmlFor="recipientPhone" className="text-sm font-medium dark:text-slate-100">Recipient Phone or Handle</Label>
                     <Input
                       id="recipientPhone"
                       type="text"
@@ -1317,7 +1317,7 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="giftAmount" className="text-sm font-medium">Amount</Label>
+                    <Label htmlFor="giftAmount" className="text-sm font-medium dark:text-slate-100">Amount</Label>
                     <Input
                       id="giftAmount"
                       type="number"
@@ -1333,7 +1333,7 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="giftMessage" className="text-sm font-medium">Message (Optional)</Label>
+                    <Label htmlFor="giftMessage" className="text-sm font-medium dark:text-slate-100">Message (Optional)</Label>
                     <Input
                       id="giftMessage"
                       type="text"
@@ -1417,8 +1417,8 @@ Date: ${formatDate(voucher.createdAt)}
         {activeTab === 'redeem' && (
           <div className="space-y-4 animate-in fade-in">
             <div>
-              <h1 className="text-2xl font-bold mb-1">Redeem Credits</h1>
-              <p className="text-sm text-muted-foreground">Choose your withdrawal method</p>
+              <h1 className="text-2xl font-bold dark:text-slate-100 mb-1">Redeem Credits</h1>
+              <p className="text-sm text-muted-foreground dark:text-slate-400">Choose your withdrawal method</p>
             </div>
 
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50">
@@ -1429,8 +1429,7 @@ Date: ${formatDate(voucher.createdAt)}
 
               {!paymentMethod ? (
                 <div className="space-y-3">
-                  <p className="text-sm font-semibold text-foreground">Select Redemption Method</p>
-                  
+                    <p className="text-sm font-semibold text-foreground dark:text-slate-100">Select Redemption Method</p>
                   <button
                     onClick={() => setPaymentMethod('eft')}
                     className="w-full p-4 border-2 border-slate-200/50 dark:border-slate-700/50 rounded-2xl hover:border-primary hover:bg-primary/5 transition text-left"
@@ -1474,7 +1473,7 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="amount" className="text-sm font-medium">Amount (ZAR)</Label>
+                    <Label htmlFor="amount" className="text-sm font-medium dark:text-slate-100">Amount (ZAR)</Label>
                     <Input
                       id="amount"
                       type="number"
@@ -1488,7 +1487,7 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="bankCode" className="text-sm font-medium">Bank Name</Label>
+                    <Label htmlFor="bankCode" className="text-sm font-medium dark:text-slate-100">Bank Name</Label>
                     <select
                       id="bankCode"
                       className="w-full px-3 py-2 border border-slate-200/50 dark:border-slate-700/50 rounded-2xl text-sm"
@@ -1507,7 +1506,7 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="accountNumber" className="text-sm font-medium">Account Number</Label>
+                    <Label htmlFor="accountNumber" className="text-sm font-medium dark:text-slate-100">Account Number</Label>
                     <Input
                       id="accountNumber"
                       type="text"
@@ -1521,7 +1520,7 @@ Date: ${formatDate(voucher.createdAt)}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="accountName" className="text-sm font-medium">Account Name</Label>
+                    <Label htmlFor="accountName" className="text-sm font-medium dark:text-slate-100">Account Name</Label>
                     <Input
                       id="accountName"
                       type="text"
@@ -1546,8 +1545,8 @@ Date: ${formatDate(voucher.createdAt)}
         {activeTab === 'history' && (
           <div className="space-y-4 animate-in fade-in">
             <div>
-              <h1 className="text-2xl font-bold mb-1">Redemption History</h1>
-              <p className="text-sm text-muted-foreground">Track your withdrawals</p>
+              <h1 className="text-2xl font-bold dark:text-slate-100 mb-1">Redemption History</h1>
+              <p className="text-sm text-muted-foreground dark:text-slate-400">Track your withdrawals</p>
             </div>
 
             {selectedRedemption ? (
@@ -1674,48 +1673,48 @@ Date: ${formatDate(voucher.createdAt)}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'home'
                 ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
-                : 'text-muted-foreground'
+                : 'text-muted-foreground dark:text-slate-400'
             }`}
           >
             <Home size={24} />
-            <span className="text-xs font-medium">Home</span>
+            <span className="text-xs font-medium dark:text-slate-400">Home</span>
           </button>
           <button
             onClick={() => setActiveTab('vouchers')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'vouchers'
                 ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
-                : 'text-muted-foreground'
+                : 'text-muted-foreground dark:text-slate-400'
             }`}
           >
             <Gift size={24} />
-            <span className="text-xs font-medium">Vouchers</span>
+            <span className="text-xs font-medium dark:text-slate-400">Vouchers</span>
           </button>
           <button
             onClick={() => setActiveTab('redeem')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'redeem'
                 ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
-                : 'text-muted-foreground'
+                : 'text-muted-foreground dark:text-slate-400'
             }`}
           >
             <WalletIcon size={24} />
-            <span className="text-xs font-medium">Redeem</span>
+            <span className="text-xs font-medium dark:text-slate-400">Redeem</span>
           </button>
           <button
             onClick={() => setActiveTab('history')}
             className={`flex-1 py-3 flex flex-col items-center gap-1 transition rounded-xl mx-1 ${
               activeTab === 'history'
                 ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
-                : 'text-muted-foreground'
+                : 'text-muted-foreground dark:text-slate-400'
             }`}
           >
             <History size={24} />
-            <span className="text-xs font-medium">History</span>
+            <span className="text-xs font-medium dark:text-slate-400">History</span>
           </button>
           <button
             onClick={() => router.push('/app/sender')}
-            className="flex-1 py-3 flex flex-col items-center gap-1 transition text-muted-foreground hover:text-primary"
+            className="flex-1 py-3 flex flex-col items-center gap-1 transition text-muted-foreground dark:text-slate-400 hover:text-primary"
             title="Switch to Sender"
           >
             <ArrowRightLeft size={28} />
