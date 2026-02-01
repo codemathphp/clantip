@@ -812,8 +812,8 @@ Recipient has been notified
                 onClick={() => setBalanceTab('sent')}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'sent'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
                 }`}
               >
                 Sent
@@ -822,8 +822,8 @@ Recipient has been notified
                 onClick={() => setBalanceTab('pending')}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'pending'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
                 }`}
               >
                 Pending
@@ -832,8 +832,8 @@ Recipient has been notified
                 onClick={() => setBalanceTab('redeemed')}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'redeemed'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-400 border border-slate-200/50 dark:border-slate-700'
                 }`}
               >
                 Redeemed

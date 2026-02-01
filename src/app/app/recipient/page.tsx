@@ -27,6 +27,7 @@ export default function RecipientDashboard() {
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [redemptions, setRedemptions] = useState<Redemption[]>([])
+  const [preloadTransactions, setPreloadTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showDrawer, setShowDrawer] = useState(false)
   const [needsPhone, setNeedsPhone] = useState(false)
@@ -36,6 +37,7 @@ export default function RecipientDashboard() {
   const [paymentMethod, setPaymentMethod] = useState<'eft' | 'mobile_wallet' | null>(null)
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null)
   const [selectedRedemption, setSelectedRedemption] = useState<Redemption | null>(null)
+  const [selectedPreloadTransaction, setSelectedPreloadTransaction] = useState<any | null>(null)
   const [tinyGifts, setTinyGifts] = useState<any[]>([])
   const [vouchersTab, setVouchersTab] = useState<'custom' | 'tiny'>('custom')
   const [selectedTinyGiftIcon, setSelectedTinyGiftIcon] = useState<string | null>(null)
@@ -142,6 +144,16 @@ export default function RecipientDashboard() {
           setRedemptions(
             redemptionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Redemption))
           )
+
+          // Load preload transactions
+          const preloadQuery = query(
+            collection(db, 'preloadTransactions'),
+            where('userId', '==', uid)
+          )
+          const preloadSnap = await getDocs(preloadQuery)
+          setPreloadTransactions(
+            preloadSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+          )
         }
 
         setLoading(false)
@@ -247,7 +259,7 @@ export default function RecipientDashboard() {
           message: 'Preload funds for gifting',
           currency: 'USD',
           reference,
-          type: 'preload',
+          isPreload: true,
         }),
       })
 
@@ -893,8 +905,8 @@ Date: ${formatDate(voucher.createdAt)}
                 }}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   vouchersTab === 'custom'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Custom Gifts
@@ -906,8 +918,8 @@ Date: ${formatDate(voucher.createdAt)}
                 }}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   vouchersTab === 'tiny'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Tiny Gifts ({tinyGifts.length})
@@ -1169,8 +1181,8 @@ Date: ${formatDate(voucher.createdAt)}
                 }}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   !giftPaymentMethod
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Load Funds
@@ -1182,8 +1194,8 @@ Date: ${formatDate(voucher.createdAt)}
                 }}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   giftPaymentMethod
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
+                    ? 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                    : 'bg-slate-50 dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Send Gift
@@ -1546,11 +1558,61 @@ Date: ${formatDate(voucher.createdAt)}
         {activeTab === 'history' && (
           <div className="space-y-4 animate-in fade-in">
             <div>
-              <h1 className="text-2xl font-bold dark:text-slate-100 mb-1">Redemption History</h1>
-              <p className="text-sm text-muted-foreground dark:text-slate-400">Track your withdrawals</p>
+              <h1 className="text-2xl font-bold dark:text-slate-100 mb-1">Transaction History</h1>
+              <p className="text-sm text-muted-foreground dark:text-slate-400">Track your preloads and withdrawals</p>
             </div>
 
-            {selectedRedemption ? (
+            {selectedPreloadTransaction ? (
+              // Preload Receipt View
+              <div className="space-y-4">
+                <button
+                  onClick={() => setSelectedPreloadTransaction(null)}
+                  className="text-sm text-primary flex items-center gap-1 hover:underline"
+                >
+                  ← Back to history
+                </button>
+
+                <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-6 border border-slate-200/50 dark:border-slate-700/50">
+                  <div className="text-center mb-6 pb-6 border-b border-slate-200/50 dark:border-slate-700/50">
+                    <div className="inline-block bg-gradient-to-br from-green-500/10 to-green-400/10 rounded-full p-4 mb-3">
+                      <Gift size={32} className="text-green-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold dark:text-slate-100 mb-2">Preload Receipt</h2>
+                    <p className="text-sm text-muted-foreground dark:text-slate-400">Transaction #{selectedPreloadTransaction.id.slice(0, 8)}</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                      <span className="text-muted-foreground dark:text-slate-400">Amount Loaded</span>
+                      <span className="font-semibold text-lg dark:text-slate-100">${(selectedPreloadTransaction.amount / 100).toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                      <span className="text-muted-foreground dark:text-slate-400">Currency</span>
+                      <span className="font-medium dark:text-slate-100">{selectedPreloadTransaction.currency}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                      <span className="text-muted-foreground dark:text-slate-400">Status</span>
+                      <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-700">
+                      <span className="text-muted-foreground dark:text-slate-400">Date</span>
+                      <span className="text-sm font-medium dark:text-slate-100">{formatDate(selectedPreloadTransaction.createdAt)}</span>
+                    </div>
+
+                    <div className="pt-4">
+                      <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800/30 rounded-xl p-4">
+                        <p className="text-sm text-green-900 dark:text-green-300">
+                          <span className="font-semibold">✓ Completed:</span> Your wallet has been loaded with ${(selectedPreloadTransaction.amount / 100).toFixed(2)}. Start sending gifts now!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : selectedRedemption ? (
               // Redemption Receipt View
               <div className="space-y-4">
                 <button
@@ -1624,25 +1686,47 @@ Date: ${formatDate(voucher.createdAt)}
                 </div>
               </div>
             ) : (
-              // List View
+              // List View - Combined Preloads and Redemptions
               <>
-                {redemptions.length === 0 ? (
-                  <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
+                {preloadTransactions.length === 0 && redemptions.length === 0 ? (
+                  <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200/50 dark:border-slate-700/50">
                     <History size={32} className="mx-auto text-muted-foreground/30 mb-3" />
-                    <p className="text-muted-foreground text-sm">No redemptions yet</p>
+                    <p className="text-muted-foreground text-sm">No transaction history yet</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {redemptions.map((redemption) => (
+                    {/* Preload Transactions */}
+                    {preloadTransactions.map((preload) => (
                       <button
-                        key={redemption.id}
-                        onClick={() => setSelectedRedemption(redemption)}
-                        className="w-full bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 hover:border-primary hover:shadow-md transition text-left"
+                        key={preload.id}
+                        onClick={() => setSelectedPreloadTransaction(preload)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 hover:border-primary hover:shadow-md transition text-left"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <div className="font-bold text-lg">{formatCurrency(redemption.amount)}</div>
+                              <div className="font-bold text-lg dark:text-slate-100">${(preload.amount / 100).toFixed(2)}</div>
+                              <Badge className="bg-green-100 text-green-800">Preloaded</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground dark:text-slate-400 mb-1">Wallet Top-up</p>
+                            <p className="text-xs text-muted-foreground dark:text-slate-400">{formatDate(preload.createdAt)}</p>
+                          </div>
+                          <ChevronRight size={20} className="text-muted-foreground flex-shrink-0 ml-2" />
+                        </div>
+                      </button>
+                    ))}
+                    
+                    {/* Redemption Transactions */}
+                    {redemptions.map((redemption) => (
+                      <button
+                        key={redemption.id}
+                        onClick={() => setSelectedRedemption(redemption)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:border-slate-700/50 hover:border-primary hover:shadow-md transition text-left"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="font-bold text-lg dark:text-slate-100">{formatCurrency(redemption.amount)}</div>
                               <Badge className={
                                 redemption.status === 'paid' ? 'bg-green-100 text-green-800' :
                                 redemption.status === 'processing' ? 'bg-blue-100 text-blue-800' :
@@ -1652,8 +1736,8 @@ Date: ${formatDate(voucher.createdAt)}
                                 {redemption.status.replace('_', ' ')}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-1">{redemption.method.replace('_', ' ').toUpperCase()}</p>
-                            <p className="text-xs text-muted-foreground">{formatDate(redemption.createdAt)}</p>
+                            <p className="text-sm text-muted-foreground dark:text-slate-400 mb-1">{redemption.method.replace('_', ' ').toUpperCase()}</p>
+                            <p className="text-xs text-muted-foreground dark:text-slate-400">{formatDate(redemption.createdAt)}</p>
                           </div>
                           <ChevronRight size={20} className="text-muted-foreground flex-shrink-0 ml-2" />
                         </div>
