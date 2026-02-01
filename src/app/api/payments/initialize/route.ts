@@ -4,7 +4,7 @@ import { collection, doc, setDoc, getDoc, Timestamp } from 'firebase/firestore'
 import { initializePayment } from '@/lib/paystack'
 
 // Get the callback URL based on the request
-function getCallbackUrl(request: NextRequest): string {
+function getCallbackUrl(request: NextRequest, isTopUp: boolean = false): string {
   const origin = request.headers.get('origin') || 
                  request.headers.get('x-forwarded-proto') + '://' + request.headers.get('x-forwarded-host') ||
                  request.headers.get('host') ||
@@ -12,6 +12,11 @@ function getCallbackUrl(request: NextRequest): string {
   
   // Ensure proper format
   const baseUrl = origin.startsWith('http') ? origin : `https://${origin}`
+  
+  // Use different callback URL based on payment type
+  if (isTopUp) {
+    return `${baseUrl}/app/top-up-callback`
+  }
   return `${baseUrl}/payment/callback`
 }
 
@@ -43,11 +48,19 @@ async function getExchangeRates() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, amount, senderId, recipientId, recipientPhone, recipientHandle, message, currency = 'USD' } = await request.json()
+    const { email, amount, senderId, recipientId, recipientPhone, recipientHandle, message, currency = 'USD', isTopUp = false } = await request.json()
 
-    if (!email || !amount || !senderId || !recipientId) {
+    if (!email || !amount || !senderId) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // For non-top-up payments, require recipientId
+    if (!isTopUp && !recipientId) {
+      return NextResponse.json(
+        { success: false, error: 'Missing recipient for gift payment' },
         { status: 400 }
       )
     }
@@ -83,8 +96,10 @@ export async function POST(request: NextRequest) {
     console.log(`  Rate used: ${conversionRate}`)
 
     // Initialize Paystack payment with dynamic callback URL
-    const callbackUrl = getCallbackUrl(request)
-    const description = `Support voucher worth R${(amountInZAR / 100).toFixed(2)} for ${recipientPhone}`
+    const callbackUrl = getCallbackUrl(request, isTopUp)
+    const description = isTopUp 
+      ? `Wallet Top-Up: $${amount}`
+      : `Support voucher worth R${(amountInZAR / 100).toFixed(2)} for ${recipientPhone}`
     
     const paystackResponse = await initializePayment(
       email,

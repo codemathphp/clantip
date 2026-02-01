@@ -35,6 +35,7 @@ export default function PaymentPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null)
+  const [isTopUp, setIsTopUp] = useState(false)
   const [userEmail, setUserEmail] = useState<string>('')
   const [exchangeRate, setExchangeRate] = useState<number>(18.50)
   const [convertedAmount, setConvertedAmount] = useState<number>(0)
@@ -47,16 +48,36 @@ export default function PaymentPage() {
       }
 
       try {
-        // Get checkout data from sessionStorage
+        // Check for top-up first
+        const pendingTopUp = sessionStorage.getItem('pendingTopUp')
         const storedData = sessionStorage.getItem('pendingCheckout')
-        if (!storedData) {
+        
+        if (!pendingTopUp && !storedData) {
           toast.error('No payment data found')
           router.push('/app/sender')
           return
         }
 
-        const data: CheckoutData = JSON.parse(storedData)
-        setCheckoutData(data)
+        // If it's a top-up
+        if (pendingTopUp) {
+          setIsTopUp(true)
+          const topUpData = JSON.parse(pendingTopUp)
+          // Create synthetic checkout data for top-up
+          const topUpCheckout: CheckoutData = {
+            baseAmount: topUpData.amount,
+            platformFee: 0,
+            processingFee: 0,
+            fixedFee: 0,
+            total: topUpData.amount,
+            recipientPhone: authUser.phoneNumber || '',
+            timestamp: topUpData.timestamp,
+          }
+          setCheckoutData(topUpCheckout)
+        } else {
+          // Regular gift checkout
+          const data: CheckoutData = JSON.parse(storedData!)
+          setCheckoutData(data)
+        }
 
         // Fetch exchange rates
         try {
@@ -65,22 +86,31 @@ export default function PaymentPage() {
           if (ratesData.success && ratesData.data.rates) {
             const rate = ratesData.data.rates.USD_TO_ZAR || 18.50
             setExchangeRate(rate)
-            setConvertedAmount(data.total * rate)
+            const amount = pendingTopUp 
+              ? JSON.parse(pendingTopUp).amount
+              : JSON.parse(storedData!).total
+            setConvertedAmount(amount * rate)
             console.log(`💱 Exchange rate fetched: 1 USD = R${rate}`)
           }
         } catch (error) {
           console.log('Using default exchange rate')
-          setConvertedAmount(data.total * exchangeRate)
+          const amount = pendingTopUp 
+            ? JSON.parse(pendingTopUp).amount
+            : JSON.parse(storedData!).total
+          setConvertedAmount(amount * exchangeRate)
         }
 
-        // Validate recipient phone
-        const formattedRecipientPhone = data.recipientPhone.replace(/\D/g, '')
-        const formattedUserPhone = authUser.phoneNumber?.replace(/\D/g, '') || ''
+        // Validate recipient phone for gifts only
+        if (!pendingTopUp) {
+          const data: CheckoutData = JSON.parse(storedData!)
+          const formattedRecipientPhone = data.recipientPhone.replace(/\D/g, '')
+          const formattedUserPhone = authUser.phoneNumber?.replace(/\D/g, '') || ''
 
-        if (formattedRecipientPhone === formattedUserPhone) {
-          toast.error('You cannot send credits to yourself')
-          router.push('/app/sender')
-          return
+          if (formattedRecipientPhone === formattedUserPhone) {
+            toast.error('You cannot send credits to yourself')
+            router.push('/app/sender')
+            return
+          }
         }
 
         // Fetch user email from Firestore
@@ -103,7 +133,23 @@ export default function PaymentPage() {
           console.log('✓ Paystack script loaded successfully')
           setLoading(false)
           // Auto-initiate payment
-          initiatePayment(data, userSnap.exists() ? (userSnap.data() as User).email || '' : '', authUser.uid)
+          const data = pendingTopUp 
+            ? {
+                baseAmount: JSON.parse(pendingTopUp).amount,
+                platformFee: 0,
+                processingFee: 0,
+                fixedFee: 0,
+                total: JSON.parse(pendingTopUp).amount,
+                recipientPhone: authUser.phoneNumber || '',
+                timestamp: JSON.parse(pendingTopUp).timestamp,
+              }
+            : JSON.parse(storedData!)
+          initiatePayment(
+            data, 
+            userSnap.exists() ? (userSnap.data() as User).email || '' : '', 
+            authUser.uid,
+            pendingTopUp ? true : false
+          )
         }
         
         script.onerror = () => {
@@ -124,7 +170,7 @@ export default function PaymentPage() {
     return () => unsubscribe()
   }, [router, exchangeRate])
 
-  const initiatePayment = async (data: CheckoutData, email: string, userId: string) => {
+  const initiatePayment = async (data: CheckoutData, email: string, userId: string, isTopUp: boolean = false) => {
     try {
       // Use stored email from user profile, or generate fallback
       const paymentEmail = email && email.includes('@') 
@@ -138,8 +184,7 @@ export default function PaymentPage() {
         amount: data.total,
         currency: 'USD',
         senderId: userId,
-        recipientId: data.recipientPhone,
-        recipientPhone: data.recipientPhone 
+        isTopUp: isTopUp,
       })
 
       const response = await fetch('/api/payments/initialize', {
@@ -154,6 +199,7 @@ export default function PaymentPage() {
           recipientPhone: data.recipientPhone,
           recipientHandle: (data as any).recipientHandle || undefined,
           message: data.message || '',
+          isTopUp: isTopUp,
         }),
       })
 
