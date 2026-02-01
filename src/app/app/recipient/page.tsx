@@ -598,7 +598,7 @@ Date: ${formatDate(voucher.createdAt)}
             <NotificationCenter />
             <button
               onClick={() => setShowDrawer(!showDrawer)}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition text-slate-600 dark:text-slate-300"
             >
               {showDrawer ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -638,11 +638,11 @@ Date: ${formatDate(voucher.createdAt)}
                   {user?.fullName?.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">{user?.fullName}</p>
-                  <p className="text-xs text-muted-foreground">{user?.phone}</p>
+                  <p className="font-semibold text-sm dark:text-slate-100">{user?.fullName}</p>
+                  <p className="text-xs text-muted-foreground dark:text-slate-400">{user?.phone}</p>
                 </div>
               </div>
-              <button onClick={() => setShowDrawer(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded">
+              <button onClick={() => setShowDrawer(false)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300">
                 <X size={20} />
               </button>
             </div>
@@ -734,7 +734,7 @@ Date: ${formatDate(voucher.createdAt)}
             <div className="absolute bottom-4 left-4 right-4">
               <Button
                 variant="outline"
-                className="w-full justify-start gap-2"
+                className="w-full justify-start gap-2 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700"
                 onClick={() => {
                   auth.signOut()
                   router.push('/')
@@ -762,7 +762,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'received'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Received
@@ -772,7 +772,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'pending'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Pending
@@ -782,7 +782,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full whitespace-nowrap font-medium transition ${
                   balanceTab === 'available'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Available
@@ -816,7 +816,7 @@ Date: ${formatDate(voucher.createdAt)}
             <div className="grid grid-cols-2 gap-3 mt-6">
               <Button
                 onClick={() => setActiveTab('vouchers')}
-                className="bg-gradient-to-r from-primary to-primary/80 h-14 text-base"
+                className="bg-gradient-to-r from-primary to-primary/80 h-14 text-base text-white"
               >
                 <Gift className="mr-2" size={20} />
                 View Gifts
@@ -824,7 +824,7 @@ Date: ${formatDate(voucher.createdAt)}
               <Button
                 onClick={() => setActiveTab('redeem')}
                 variant="outline"
-                className="h-14 text-base"
+                className="h-14 text-base dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700"
               >
                 <WalletIcon className="mr-2" size={20} />
                 Redeem
@@ -833,10 +833,10 @@ Date: ${formatDate(voucher.createdAt)}
 
             <div className="mt-8">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-semibold text-sm">Recent Vouchers</h2>
+                <h2 className="font-semibold text-sm dark:text-slate-100">Recent Vouchers</h2>
                 <button
                   onClick={() => setActiveTab('vouchers')}
-                  className="text-primary text-xs font-medium flex items-center gap-1"
+                  className="text-primary text-xs font-medium flex items-center gap-1 dark:text-orange-400"
                 >
                   View all <ChevronRight size={14} />
                 </button>
@@ -893,7 +893,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   vouchersTab === 'custom'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Custom Gifts
@@ -906,7 +906,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   vouchersTab === 'tiny'
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Tiny Gifts ({tinyGifts.length})
@@ -1169,7 +1169,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   !giftPaymentMethod
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Load Funds
@@ -1182,7 +1182,7 @@ Date: ${formatDate(voucher.createdAt)}
                 className={`px-4 py-2 rounded-full font-medium transition ${
                   giftPaymentMethod
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50'
+                    : 'bg-white dark:bg-slate-800 text-muted-foreground dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50'
                 }`}
               >
                 Send Gift
