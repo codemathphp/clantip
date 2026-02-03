@@ -217,22 +217,42 @@ export default function RecipientDashboard() {
     setCheckingActiveStream(true)
     const q = query(
       collection(db, 'giftStreams'),
-      where('creatorUid', '==', user.id || auth.currentUser?.uid),
-      where('expiresAt', '>', new Date())
+      where('creatorUid', '==', user.id || auth.currentUser?.uid)
     )
     const unsub = onSnapshot(q, (snap) => {
       if (snap.empty) {
         setActiveStreamId(null)
         setActiveStreamExpires(null)
       } else {
-        setActiveStreamId(snap.docs[0].id)
-        const data: any = snap.docs[0].data()
-        const expiresAt = data?.expiresAt
-        let ex: Date | null = null
-        if (expiresAt) {
-          ex = typeof expiresAt.toDate === 'function' ? expiresAt.toDate() : new Date(expiresAt)
+        // Find first non-expired stream
+        let activeDoc = null
+        let activeExpiry: Date | null = null
+        const now = new Date()
+        
+        for (const doc of snap.docs) {
+          const data: any = doc.data()
+          const expiresAt = data?.expiresAt
+          let expireDate: Date | null = null
+          
+          if (expiresAt) {
+            expireDate = typeof expiresAt.toDate === 'function' ? expiresAt.toDate() : new Date(expiresAt)
+          }
+          
+          // Check if stream has not expired
+          if (expireDate && expireDate > now) {
+            activeDoc = doc
+            activeExpiry = expireDate
+            break
+          }
         }
-        setActiveStreamExpires(ex)
+        
+        if (activeDoc) {
+          setActiveStreamId(activeDoc.id)
+          setActiveStreamExpires(activeExpiry)
+        } else {
+          setActiveStreamId(null)
+          setActiveStreamExpires(null)
+        }
       }
       setCheckingActiveStream(false)
     }, (err) => {
