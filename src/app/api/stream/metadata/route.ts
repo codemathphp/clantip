@@ -39,8 +39,8 @@ export async function POST(req: Request) {
       try {
         let pw: any = null
         try {
-          // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
-          pw = require('playwright')
+          const req: any = eval('require')
+          pw = req('playwright')
         } catch {
           // playwright not installed, skip screenshot capture
         }

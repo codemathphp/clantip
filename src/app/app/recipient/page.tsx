@@ -208,7 +208,7 @@ export default function RecipientDashboard() {
       setCheckingActiveStream(false)
     })
     return () => unsub()
-  }, [user?.id])
+  }, [user])
   const [preloadForm, setPreloadForm] = useState({
     amount: '',
   })
