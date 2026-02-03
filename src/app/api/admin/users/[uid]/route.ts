@@ -15,9 +15,12 @@ import { NextRequest, NextResponse } from 'next/server'
  *   status?: 'active' | 'suspended' | 'deleted'
  * }
  */
-export async function PUT(request: NextRequest, { params }: { params: { uid: string } }) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
   try {
-    const { uid } = await Promise.resolve(params)
+    const { uid } = await params
     
     // Verify admin access (in production, validate against auth token)
     const authHeader = request.headers.get('authorization')
@@ -69,9 +72,12 @@ export async function PUT(request: NextRequest, { params }: { params: { uid: str
 /**
  * GET /api/admin/users/[uid] - Fetch user information
  */
-export async function GET(request: NextRequest, { params }: { params: { uid: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ uid: string }> }
+) {
   try {
-    const { uid } = await Promise.resolve(params)
+    const { uid } = await params
 
     if (!uid || typeof uid !== 'string') {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
