@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
-import { collection, query, where, getDocs, doc, getDoc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore'
+import { collection, query, where, getDocs, doc, getDoc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore'
 import { ensureUserRecord } from '@/lib/userSync'
 import { usePwaPrompt } from '@/lib/usePwaPrompt'
 import { createNotification } from '@/lib/createNotification'
@@ -56,6 +56,33 @@ export default function RecipientDashboard() {
   })
   const [giftPaymentMethod, setGiftPaymentMethod] = useState<'sender-balance' | 'available-credits' | 'checkout' | null>(null)
   const [giftLoading, setGiftLoading] = useState(false)
+
+  const handleCreateGiftStream = async () => {
+    if (!user) {
+      router.push('/auth')
+      return
+    }
+    try {
+      setGiftLoading(true)
+      const title = `${user.fullName || user.handle || 'Live'} Stream`
+      const docRef = await addDoc(collection(db, 'giftStreams'), {
+        title,
+        streamUrl: '',
+        thumbnailUrl: null,
+        creatorUid: user.id || auth.currentUser?.uid,
+        creatorName: user.fullName || '',
+        creatorHandle: user.handle || '',
+        createdAt: serverTimestamp(),
+      })
+      toast.success('Gift stream created. Opening public page...')
+      router.push(`/gift-stream/${docRef.id}`)
+    } catch (e: any) {
+      console.error('Failed to create gift stream', e)
+      toast.error(e?.message || 'Failed to create gift stream')
+    } finally {
+      setGiftLoading(false)
+    }
+  }
   const [preloadForm, setPreloadForm] = useState({
     amount: '',
   })
@@ -835,12 +862,13 @@ Date: ${formatDate(voucher.createdAt)}
                 View Gifts
               </Button>
               <Button
-                onClick={() => router.push('/app/gift-stream')}
+                onClick={handleCreateGiftStream}
                 variant="outline"
                 className="h-14 text-base rounded-2xl dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700"
+                disabled={giftLoading}
               >
                 <WalletIcon className="mr-2" size={20} />
-                Gift Stream
+                {giftLoading ? 'Creating...' : 'Gift Stream'}
               </Button>
             </div>
 
