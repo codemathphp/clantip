@@ -10,6 +10,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import Image from 'next/image'
 import toast from 'react-hot-toast'
 import {
@@ -79,6 +87,10 @@ export default function AdminDashboard() {
     USD_TO_KES: 154,
   })
   const [lastExchangeRateUpdate, setLastExchangeRateUpdate] = useState<string>('')
+  const [editingUser, setEditingUser] = useState<any>(null)
+  const [editFormData, setEditFormData] = useState({ fullName: '', email: '', phoneE164: '', handle: '', role: 'sender' as any })
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isSavingUser, setIsSavingUser] = useState(false)
 
   // Define loadDashboardData before useEffect to avoid dependency array issues
   const loadDashboardData = useCallback(async () => {
@@ -296,6 +308,42 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Error banning user:', error)
       toast.error('Failed to ban user')
+    }
+  }
+
+  const handleEditUser = (u: any) => {
+    setEditingUser(u)
+    setEditFormData({
+      fullName: u.fullName || '',
+      email: u.email || '',
+      phoneE164: u.phoneE164 || '',
+      handle: u.handle || '',
+      role: u.role || 'sender',
+    })
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveUserChanges = async () => {
+    if (!editingUser) return
+    setIsSavingUser(true)
+    try {
+      await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await auth.currentUser?.getIdToken()) || ''}`,
+        },
+        body: JSON.stringify(editFormData),
+      })
+      toast.success('User updated successfully')
+      setIsEditModalOpen(false)
+      setEditingUser(null)
+      await loadDashboardData()
+    } catch (error) {
+      console.error('Error updating user:', error)
+      toast.error('Failed to update user')
+    } finally {
+      setIsSavingUser(false)
     }
   }
 
@@ -985,6 +1033,13 @@ export default function AdminDashboard() {
                             </Badge>
                           </td>
                           <td className="py-4 px-4 space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditUser(u)}
+                            >
+                              Edit
+                            </Button>
                             {u.status === 'active' && (
                               <>
                                 <Button
@@ -1396,6 +1451,101 @@ export default function AdminDashboard() {
           </div>
         )}
         </div>
+
+        {/* Edit User Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit User Information</DialogTitle>
+              <DialogDescription>
+                Update details for {editingUser?.fullName || 'user'}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  value={editFormData.fullName}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, fullName: e.target.value })
+                  }
+                  placeholder="Enter full name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, email: e.target.value })
+                  }
+                  placeholder="Enter email address"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phoneE164">Phone (E.164)</Label>
+                <Input
+                  id="phoneE164"
+                  value={editFormData.phoneE164}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, phoneE164: e.target.value })
+                  }
+                  placeholder="+1234567890"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="handle">Handle/Username</Label>
+                <Input
+                  id="handle"
+                  value={editFormData.handle}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, handle: e.target.value })
+                  }
+                  placeholder="@username"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <select
+                  id="role"
+                  value={editFormData.role}
+                  onChange={(e) =>
+                    setEditFormData({ ...editFormData, role: e.target.value as any })
+                  }
+                  className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                >
+                  <option value="sender">Sender</option>
+                  <option value="recipient">Recipient</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+                disabled={isSavingUser}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveUserChanges}
+                disabled={isSavingUser}
+              >
+                {isSavingUser ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   )
