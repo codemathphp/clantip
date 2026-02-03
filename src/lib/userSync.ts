@@ -8,6 +8,14 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
  *   copy legacy data into users/{uid], create phone_index and mark legacy migrated
  * - Else, if phoneProvided, create users/{uid} with phoneE164 and set indices
  */
+function stripUndefined(obj: Record<string, any>) {
+  const out: Record<string, any> = {}
+  for (const k of Object.keys(obj)) {
+    if (obj[k] !== undefined) out[k] = obj[k]
+  }
+  return out
+}
+
 export async function ensureUserRecord(uid: string, phoneProvided?: string) {
   if (!uid) throw new Error('Missing uid')
 
@@ -35,7 +43,7 @@ export async function ensureUserRecord(uid: string, phoneProvided?: string) {
       const legacyData = legacySnap.data() as any
       // Copy legacy fields into users/{uid}
       const newData = { ...legacyData, phoneE164, phone: phoneE164 || legacyData.phone || '', authUid: uid, migrated: true }
-      await setDoc(userByUidRef, newData)
+      await setDoc(userByUidRef, stripUndefined(newData))
       // Ensure indexing documents
       await setDoc(uidIndexRef, { phoneE164 })
       const phoneIndexRef = doc(db, 'phone_index', phoneE164)
@@ -55,7 +63,7 @@ export async function ensureUserRecord(uid: string, phoneProvided?: string) {
       baseData = { ...(phoneSnap.data() as any), phoneE164: phoneProvided, phone: phoneProvided || (phoneSnap.data() as any).phone || '', authUid: uid }
       try { await updateDoc(phoneRef, { migrated: true }) } catch (e) { /* ignore */ }
     }
-    await setDoc(userByUidRef, baseData)
+    await setDoc(userByUidRef, stripUndefined(baseData))
     await setDoc(uidIndexRef, { phoneE164: phoneProvided })
     const phoneIndexRef = doc(db, 'phone_index', phoneProvided)
     await setDoc(phoneIndexRef, { uid })
@@ -64,7 +72,7 @@ export async function ensureUserRecord(uid: string, phoneProvided?: string) {
 
   // Nothing to do: create minimal users/{uid} placeholder
   const minimal = { authUid: uid, createdAt: new Date(), phone: '' }
-  await setDoc(userByUidRef, minimal)
+  await setDoc(userByUidRef, stripUndefined(minimal))
   await setDoc(uidIndexRef, { phoneE164: null })
   return { uid, phone: '', data: minimal }
 }
