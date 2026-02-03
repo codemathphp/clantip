@@ -1853,7 +1853,7 @@ Date: ${formatDate(voucher.createdAt)}
             <div className="flex items-center justify-between mb-2">
               <div>
                 <h3 className="text-lg font-semibold">Share Gift Stream</h3>
-                <p className="text-xs text-muted-foreground">Enter a title and your stream link — we'll generate the thumbnail for you.</p>
+                <p className="text-xs text-muted-foreground">Enter a title and your stream link — we will generate the thumbnail for you.</p>
               </div>
               <button className="p-2" onClick={() => setIsStreamModalOpen(false)}>Close</button>
             </div>

@@ -68,6 +68,7 @@ export default function PublicGiftStreamPage() {
   useEffect(() => {
     if (!id || !user) return
 
+    let presenceId: string | null = null
     let unsubscribePresence: (() => void) | null = null
     let unsubscribeGifts: (() => void) | null = null
 
@@ -75,12 +76,14 @@ export default function PublicGiftStreamPage() {
       try {
         // Create presence document for this user on this stream
         const presenceRef = collection(db, `giftStreams/${id}/presence`)
+        let presenceId: string | null = null
         const presenceDoc = await addDoc(presenceRef, {
           uid: user.uid,
           userName: user.displayName || 'Guest',
           connectedAt: serverTimestamp(),
           lastActivity: serverTimestamp()
         })
+        presenceId = presenceDoc.id
         setPresenceDocId(presenceDoc.id)
 
         // Listen to all presence documents to count connected users
@@ -109,10 +112,14 @@ export default function PublicGiftStreamPage() {
     return () => {
       if (unsubscribePresence) unsubscribePresence()
       if (unsubscribeGifts) unsubscribeGifts()
-      if (presenceDocId) {
-        deleteDoc(doc(db, `giftStreams/${id}/presence`, presenceDocId)).catch(
-          error => console.error('Error removing presence:', error)
-        )
+      try {
+        if (typeof presenceId !== 'undefined' && presenceId) {
+          deleteDoc(doc(db, `giftStreams/${id}/presence`, presenceId)).catch(
+            error => console.error('Error removing presence:', error)
+          )
+        }
+      } catch (e) {
+        // presenceId may be out of scope if setup never ran; ignore
       }
     }
   }, [id, user])
