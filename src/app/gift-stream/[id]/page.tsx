@@ -190,13 +190,7 @@ export default function PublicGiftStreamPage() {
 
       toast.success(json.message || 'Gift sent')
       setLoveUnits(json.newBalance)
-      se{/* Connected users indicator */}
-        <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary">
-          <Users className="w-4 h-4" />
-          <span>{connectedUsers} {connectedUsers === 1 ? 'person' : 'people'} watching</span>
-        </div>
-
-        tSelectedIcon(null)
+      setSelectedIcon(null)
     } catch (e: any) {
       console.error(e)
       toast.error(e.message || 'Failed to send')
@@ -211,12 +205,39 @@ export default function PublicGiftStreamPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-3xl mx-auto p-6">
+        {/* Connected users indicator */}
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary">
+          <Users className="w-4 h-4" />
+          <span>{connectedUsers} {connectedUsers === 1 ? 'person' : 'people'} watching</span>
+        </div>
+
         <div className="flex flex-col md:flex-row gap-6 items-start mb-6">
           <div className="w-full md:w-1/3 h-48 md:h-40 bg-slate-200 rounded overflow-hidden">
             {stream.thumbnailUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={stream.thumbnailUrl} alt={stream.title} className="w-full h-full object-cover" />
-            ) : (4 px-2">
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">No thumbnail</div>
+            )}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">{stream.title}</h1>
+            <p className="text-sm text-muted-foreground">By {stream.creatorName || stream.creatorHandle}</p>
+            <div className="mt-2">
+              <a href={stream.streamUrl} target="_blank" rel="noreferrer" className="text-primary underline">Watch Stream</a>
+            </div>
+          </div>
+          <div className="w-full md:w-auto ml-0 md:ml-auto text-right">
+            <p className="text-sm text-muted-foreground">Your balance</p>
+            <div className="text-2xl font-bold text-primary">{(isNaN(loveUnits) ? 0 : loveUnits).toFixed(2)}</div>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-sm text-muted-foreground">Tap an icon to gift the creator from your preloaded balance</p>
+        </div>
+
+        <div className="overflow-x-auto py-4 px-2">
           <div className="flex gap-4 w-max">
             {icons.map((icon) => {
               const hasBalance = loveUnits >= icon.amount
@@ -232,28 +253,7 @@ export default function PublicGiftStreamPage() {
                   title={icon.name}
                 >
                   <div className={`w-14 h-14 flex items-center justify-center ${!hasBalance ? 'grayscale' : ''}`}>
-                    <LottieIcon src={icon.lottieUrl} themeColor={hasBalance ? '#1a9b8e' : '#9ca3af'} className="w-full h-full" /
-        <div className="overflow-x-auto py-2">
-          <div className="flex gap-3 w-max">
-            {icons.map((icon) => {
-              const hasBalance = loveUnits >= icon.amount
-              return (
-                <button
-                  key={icon.id}
-                  onClick={() => hasBalance && setSelectedIcon(icon)}
-                  className={`group relative rounded-lg p-1 transition-all bg-white border border-slate-100 ${
-                    hasBalance ? 'hover:shadow-md hover:scale-110 cursor-pointer' : 'opacity-40 cursor-not-allowed'
-                  }`}
-                  style={{ minWidth: 64 }}
-                  disabled={!hasBalance}
-                  aria-label={icon.name}
-                  title={icon.name}
-                >
-                  <div className={`w-12 h-12 flex items-center justify-center mx-auto ${!hasBalance ? 'grayscale' : ''}`}>
                     <LottieIcon src={icon.lottieUrl} themeColor={hasBalance ? '#1a9b8e' : '#9ca3af'} className="w-full h-full" />
-                  </div>
-                  <div className="text-center mt-1">
-                    <p className="text-xs font-medium line-clamp-1">{icon.name}</p>
                   </div>
                 </button>
               )
@@ -290,6 +290,23 @@ export default function PublicGiftStreamPage() {
                 </Button>
               </div>
 
+              {recentGifts.length > 0 && (
+                <div className="border-t pt-4 overflow-y-auto flex-1">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Recent gifts</p>
+                  <div className="space-y-2">
+                    {recentGifts.slice(-5).reverse().map((gift) => (
+                      <div key={gift.id} className="text-sm flex items-center gap-2 py-1">
+                        <span className="font-medium">{gift.giverName}</span>
+                        <span className="text-muted-foreground">sent</span>
+                        <span>{gift.iconName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Animated gift celebrations */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -333,23 +350,6 @@ export default function PublicGiftStreamPage() {
             }
           }
         `}</style>
-              {recentGifts.length > 0 && (
-                <div className="border-t pt-4 overflow-y-auto flex-1">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Recent gifts</p>
-                  <div className="space-y-2">
-                    {recentGifts.slice(-5).reverse().map((gift) => (
-                      <div key={gift.id} className="text-sm flex items-center gap-2 py-1">
-                        <span className="font-medium">{gift.giverName}</span>
-                        <span className="text-muted-foreground">sent</span>
-                        <span>{gift.iconName}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
