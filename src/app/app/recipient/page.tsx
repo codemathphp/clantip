@@ -75,6 +75,7 @@ export default function RecipientDashboard() {
   const [activeStreamId, setActiveStreamId] = useState<string | null>(null)
   const [checkingActiveStream, setCheckingActiveStream] = useState(true)
   const [activeStreamExpires, setActiveStreamExpires] = useState<Date | null>(null)
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false)
 
   // Open modal to collect stream info from the creator (recipient)
   const handleCreateGiftStream = () => {
@@ -164,15 +165,46 @@ export default function RecipientDashboard() {
         try { await (navigator as any).share({ title: streamTitle, url: publicUrl }) } catch (e) { /* ignore */ }
       }
 
-      toast.success('Stream created and link copied to clipboard')
+      toast.success('Stream created! You can now share it with your audience.')
       setIsStreamModalOpen(false)
-      router.push(`/gift-stream/${docRef.id}`)
     } catch (e: any) {
       console.error('Failed to create gift stream', e)
       toast.error(e?.message || 'Failed to create gift stream')
     } finally {
       setCreatingStream(false)
       setGiftLoading(false)
+    }
+  }
+
+  const handleThumbnailFileUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    setUploadingThumbnail(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const base64 = e.target?.result as string
+          const key = `stream-thumbs/${user?.id || auth.currentUser?.uid}-${Date.now()}.jpg`
+          const sRef = storageRef(storage, key)
+          await uploadString(sRef, base64, 'data_url')
+          const publicUrl = await getDownloadURL(sRef)
+          setStreamThumbnailInput(publicUrl)
+          toast.success('Thumbnail uploaded')
+        } catch (err) {
+          console.error('upload error', err)
+          toast.error('Failed to upload thumbnail')
+        } finally {
+          setUploadingThumbnail(false)
+        }
+      }
+      reader.readAsDataURL(file)
+    } catch (e) {
+      console.error(e)
+      toast.error('Failed to read file')
+      setUploadingThumbnail(false)
     }
   }
 
@@ -992,10 +1024,10 @@ Date: ${formatDate(voucher.createdAt)}
                   onClick={handleCreateGiftStream}
                   variant="outline"
                   className={`h-14 text-base rounded-2xl dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700 ${activeStreamId ? 'ring-2 ring-green-400 ring-offset-2 stream-ring' : ''}`}
-                  disabled={giftLoading}
+                  disabled={activeStreamId ? true : giftLoading}
                 >
                   <WalletIcon className="mr-2" size={20} />
-                  {activeStreamId ? 'Open Stream' : (giftLoading ? 'Creating...' : 'Gift Stream')}
+                  {activeStreamId ? 'Stream Active' : (giftLoading ? 'Creating...' : 'Gift Stream')}
                 </Button>
               </span>
             </div>
@@ -1929,47 +1961,69 @@ Date: ${formatDate(voucher.createdAt)}
                 <Label htmlFor="streamUrl">Stream URL</Label>
                 <Input id="streamUrl" value={streamUrlInput} onChange={(e) => setStreamUrlInput(e.target.value)} placeholder="https://youtube.com/..." />
               </div>
+
+              <div>
+                <Label htmlFor="thumbnailFile">Thumbnail (Upload Image or Auto-Generate)</Label>
+                <input
+                  id="thumbnailFile"
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingThumbnail}
+                  onChange={(e) => {
+                    const file = e.currentTarget.files?.[0]
+                    if (file) handleThumbnailFileUpload(file)
+                  }}
+                  className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 dark:file:bg-orange-900/40 dark:file:text-orange-300"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Upload a JPG or PNG image from your device</p>
+              </div>
+
               <div className="flex items-center gap-2">
-                <Button onClick={async () => {
-                  if (!streamUrlInput.trim()) { toast.error('Please add a stream URL first'); return }
-                  try {
-                    const res = await fetch('/api/stream/metadata', {
-                      method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ url: streamUrlInput.trim(), capture: true })
-                    })
-                    const json = await res.json()
-                    if (res.ok) {
-                      if (json.thumbnail) {
-                        if (typeof json.thumbnail === 'string' && json.thumbnail.startsWith('data:')) {
-                          try {
-                            const key = `stream-thumbs/${user?.id || auth.currentUser?.uid}-${Date.now()}.jpg`
-                            const sRef = storageRef(storage, key)
-                            await uploadString(sRef, json.thumbnail, 'data_url')
-                            const publicUrl = await getDownloadURL(sRef)
-                            setStreamThumbnailInput(publicUrl)
-                          } catch (e) {
-                            console.warn('upload failed', e)
+                <Button 
+                  onClick={async () => {
+                    if (!streamUrlInput.trim()) { toast.error('Please add a stream URL first'); return }
+                    try {
+                      const res = await fetch('/api/stream/metadata', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: streamUrlInput.trim(), capture: true })
+                      })
+                      const json = await res.json()
+                      if (res.ok) {
+                        if (json.thumbnail) {
+                          if (typeof json.thumbnail === 'string' && json.thumbnail.startsWith('data:')) {
+                            try {
+                              const key = `stream-thumbs/${user?.id || auth.currentUser?.uid}-${Date.now()}.jpg`
+                              const sRef = storageRef(storage, key)
+                              await uploadString(sRef, json.thumbnail, 'data_url')
+                              const publicUrl = await getDownloadURL(sRef)
+                              setStreamThumbnailInput(publicUrl)
+                            } catch (e) {
+                              console.warn('upload failed', e)
+                              setStreamThumbnailInput(json.thumbnail)
+                            }
+                          } else {
                             setStreamThumbnailInput(json.thumbnail)
                           }
-                        } else {
-                          setStreamThumbnailInput(json.thumbnail)
                         }
+                        if (json.platform) setStreamTitle((t) => t)
+                        toast.success('Thumbnail generated — review or override before creating')
+                      } else {
+                        toast.error(json.error || 'Failed to generate thumbnail')
                       }
-                      if (json.platform) setStreamTitle((t) => t)
-                      toast.success('Thumbnail generated — review or override before creating')
-                    } else {
-                      toast.error(json.error || 'Failed to generate thumbnail')
+                    } catch (e) {
+                      console.error(e)
+                      toast.error('Failed to generate thumbnail')
                     }
-                  } catch (e) {
-                    console.error(e)
-                    toast.error('Failed to generate thumbnail')
-                  }
-                }}>Generate Thumbnail</Button>
-                <span className="text-sm text-muted-foreground">We will auto-detect platform and thumbnail from the link.</span>
+                  }}
+                  disabled={uploadingThumbnail}
+                >
+                  {uploadingThumbnail ? 'Uploading...' : 'Generate Thumbnail'}
+                </Button>
+                <span className="text-sm text-muted-foreground">Or auto-detect from URL</span>
               </div>
 
               <div>
-                <Label htmlFor="thumbnailUrl">Thumbnail URL (auto-generated or override)</Label>
+                <Label htmlFor="thumbnailUrl">Thumbnail URL (if you prefer to paste a link)</Label>
                 <Input id="thumbnailUrl" value={streamThumbnailInput} onChange={(e) => setStreamThumbnailInput(e.target.value)} placeholder="https://.../thumb.jpg" />
               </div>
 

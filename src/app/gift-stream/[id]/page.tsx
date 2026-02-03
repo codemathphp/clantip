@@ -26,6 +26,7 @@ export default function PublicGiftStreamPage() {
   const [presenceDocId, setPresenceDocId] = useState<string | null>(null)
   const [animatingGifts, setAnimatingGifts] = useState<any[]>([])
   const [isExpired, setIsExpired] = useState(false)
+  const [isCreator, setIsCreator] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -127,6 +128,13 @@ export default function PublicGiftStreamPage() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u: any) => {
       setUser(u)
+      // Check if this user is the creator of this stream
+      if (u && stream) {
+        const isCreatorUser = u.uid === (stream?.creatorUid || null)
+        setIsCreator(isCreatorUser)
+      } else {
+        setIsCreator(false)
+      }
       if (u) {
         try {
           const userRef = doc(db, 'users', u.uid)
@@ -143,7 +151,7 @@ export default function PublicGiftStreamPage() {
       }
     })
     return () => unsub()
-  }, [])
+  }, [stream])
 
   const handleShare = async () => {
     if (!id) return
@@ -260,12 +268,31 @@ export default function PublicGiftStreamPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <div className="max-w-3xl mx-auto p-6">
+        {/* Back button for creator */}
+        {isCreator && (
+          <button
+            onClick={() => router.push('/app/recipient')}
+            className="mb-4 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition"
+          >
+            ← Back to Dashboard
+          </button>
+        )}
+
         {/* Connected users indicator */}
-        <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary">
-          <Users className="w-4 h-4" />
-          <span>{connectedUsers} {connectedUsers === 1 ? 'person' : 'people'} watching</span>
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+            <Users className="w-4 h-4" />
+            <span>{connectedUsers} {connectedUsers === 1 ? 'person' : 'people'} watching</span>
+          </div>
+          {/* Share button for creator */}
+          {isCreator && (
+            <Button onClick={handleShare} variant="outline" size="sm" className="gap-2">
+              <Share2 className="w-4 h-4" />
+              Share Stream
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 items-start mb-6">
