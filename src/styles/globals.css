@@ -78,6 +78,25 @@ body {
   animation: gentleRing 2s ease-in-out infinite;
 }
 
+@keyframes livePulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.stream-live-pulse {
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
 /* Simple tooltip used for stream expiry */
 .stream-tooltip { position: relative; display: inline-block }
 .stream-tooltip[data-tooltip]:hover::after {

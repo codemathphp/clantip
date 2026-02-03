@@ -215,11 +215,18 @@ export default function RecipientDashboard() {
       return
     }
     setCheckingActiveStream(true)
+    const uid = auth.currentUser?.uid
+    if (!uid) {
+      setActiveStreamId(null)
+      setCheckingActiveStream(false)
+      return
+    }
     const q = query(
       collection(db, 'giftStreams'),
-      where('creatorUid', '==', user.id || auth.currentUser?.uid)
+      where('creatorUid', '==', uid)
     )
     const unsub = onSnapshot(q, (snap) => {
+      console.log('Active stream query result:', snap.size, 'docs for uid:', uid)
       if (snap.empty) {
         setActiveStreamId(null)
         setActiveStreamExpires(null)
@@ -238,6 +245,8 @@ export default function RecipientDashboard() {
             expireDate = typeof expiresAt.toDate === 'function' ? expiresAt.toDate() : new Date(expiresAt)
           }
           
+          console.log('Stream expires at:', expireDate, 'now:', now, 'is active:', expireDate && expireDate > now)
+          
           // Check if stream has not expired
           if (expireDate && expireDate > now) {
             activeDoc = doc
@@ -247,9 +256,11 @@ export default function RecipientDashboard() {
         }
         
         if (activeDoc) {
+          console.log('Found active stream:', activeDoc.id)
           setActiveStreamId(activeDoc.id)
           setActiveStreamExpires(activeExpiry)
         } else {
+          console.log('No active streams found')
           setActiveStreamId(null)
           setActiveStreamExpires(null)
         }
@@ -1041,13 +1052,19 @@ Date: ${formatDate(voucher.createdAt)}
               </Button>
               <span className="stream-tooltip" data-tooltip={activeStreamExpires ? `Expires: ${activeStreamExpires.toLocaleString()}` : ''}>
                 <Button
-                  onClick={handleCreateGiftStream}
+                  onClick={() => {
+                    if (activeStreamId) {
+                      router.push(`/gift-stream/${activeStreamId}`)
+                    } else {
+                      handleCreateGiftStream()
+                    }
+                  }}
                   variant="outline"
-                  className={`h-14 text-base rounded-2xl dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700 ${activeStreamId ? 'ring-2 ring-green-400 ring-offset-2 stream-ring' : ''}`}
-                  disabled={activeStreamId ? true : giftLoading}
+                  className={`h-14 text-base rounded-2xl dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700 transition-all ${activeStreamId ? 'ring-2 ring-green-400 ring-offset-2 stream-ring stream-live-pulse bg-green-50/50 dark:bg-green-950/20' : ''}`}
+                  disabled={giftLoading && !activeStreamId}
                 >
                   <WalletIcon className="mr-2" size={20} />
-                  {activeStreamId ? 'Stream Active' : (giftLoading ? 'Creating...' : 'Gift Stream')}
+                  {activeStreamId ? '🔴 Stream Active' : (giftLoading ? 'Creating...' : 'Gift Stream')}
                 </Button>
               </span>
             </div>
