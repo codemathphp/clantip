@@ -7,7 +7,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc, collection, query, where, getDocs, onSnapshot, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore'
 import LottieIcon from '@/components/LottieIcon'
 import { Button } from '@/components/ui/button'
-import { Heart, Users } from 'lucide-react'
+import { Heart, Users, Share2, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function PublicGiftStreamPage() {
@@ -25,6 +25,7 @@ export default function PublicGiftStreamPage() {
   const [recentGifts, setRecentGifts] = useState<any[]>([])
   const [presenceDocId, setPresenceDocId] = useState<string | null>(null)
   const [animatingGifts, setAnimatingGifts] = useState<any[]>([])
+  const [isExpired, setIsExpired] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -39,6 +40,15 @@ export default function PublicGiftStreamPage() {
         }
         const data = snap.data()
         setStream({ id: snap.id, ...data })
+
+        // Check if stream has expired (24 hours)
+        if (data.createdAt) {
+          const createdTime = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt)
+          const expiryTime = new Date(createdTime.getTime() + 24 * 60 * 60 * 1000)
+          if (new Date() > expiryTime) {
+            setIsExpired(true)
+          }
+        }
 
         // load active icons
         const iconsQuery = query(collection(db, 'microGiftIcons'))
@@ -128,6 +138,31 @@ export default function PublicGiftStreamPage() {
     return () => unsub()
   }, [])
 
+  const handleShare = async () => {
+    if (!id) return
+    const shareUrl = `${window.location.origin}/gift-stream/${id}`
+    const shareTitle = stream?.title || 'Check out this live stream'
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      toast.success('Link copied to clipboard!')
+    } catch (e) {
+      console.warn('Failed to copy to clipboard')
+    }
+
+    // Try native share if available
+    if ((navigator as any).share) {
+      try {
+        await (navigator as any).share({
+          title: shareTitle,
+          url: shareUrl
+        })
+      } catch (e) {
+        // User cancelled native share, that's ok
+      }
+    }
+  }
+
   const handleSend = async () => {
     if (!selectedIcon) return
     if (!user) {
@@ -202,6 +237,21 @@ export default function PublicGiftStreamPage() {
   if (loading) return <div className="p-6">Loading...</div>
   if (!stream) return <div className="p-6">Stream not found</div>
 
+  if (isExpired) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-6">
+        <div className="max-w-md text-center">
+          <Clock className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Stream Expired</h1>
+          <p className="text-muted-foreground mb-6">
+            This gift stream has expired after 24 hours. It was meant to support a live stream that has ended.
+          </p>
+          <Button onClick={() => router.push('/')}>Back to Home</Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-3xl mx-auto p-6">
@@ -212,19 +262,29 @@ export default function PublicGiftStreamPage() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 items-start mb-6">
-          <div className="w-full md:w-1/3 h-48 md:h-40 bg-slate-200 rounded overflow-hidden">
+          <div className="w-full md:w-1/3 h-48 md:h-40 bg-slate-200 rounded overflow-hidden relative">
             {stream.thumbnailUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={stream.thumbnailUrl} alt={stream.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">No thumbnail</div>
             )}
+            {/* Host badge on thumbnail */}
+            <div className="absolute top-2 right-2 bg-black/60 text-white text-xs font-semibold px-2 py-1 rounded flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              Hosted by {stream.creatorName || stream.creatorHandle}
+            </div>
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold">{stream.title}</h1>
-            <p className="text-sm text-muted-foreground">By {stream.creatorName || stream.creatorHandle}</p>
-            <div className="mt-2">
-              <a href={stream.streamUrl} target="_blank" rel="noreferrer" className="text-primary underline">Watch Stream</a>
+            <h1 className="text-2xl font-bold mb-2">{stream.title}</h1>
+            <div className="flex items-center gap-4 mb-4">
+              <Button variant="outline" size="sm" onClick={handleShare} className="gap-2">
+                <Share2 className="w-4 h-4" />
+                Share Stream
+              </Button>
+              <a href={stream.streamUrl} target="_blank" rel="noreferrer" className="text-primary underline text-sm font-medium hover:no-underline">
+                Watch Live
+              </a>
             </div>
           </div>
           <div className="w-full md:w-auto ml-0 md:ml-auto text-right">

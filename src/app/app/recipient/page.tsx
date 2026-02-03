@@ -102,6 +102,8 @@ export default function RecipientDashboard() {
     }
     setCreatingStream(true)
     try {
+      const now = new Date()
+      const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000)
       const docRef = await addDoc(collection(db, 'giftStreams'), {
         title: streamTitle.trim(),
         streamUrl: streamUrlInput.trim(),
@@ -110,6 +112,7 @@ export default function RecipientDashboard() {
         creatorName: user.fullName || '',
         creatorHandle: user.handle || '',
         createdAt: serverTimestamp(),
+        expiresAt: expiresAt,
       })
 
       const publicUrl = `${window.location.origin}/gift-stream/${docRef.id}`
