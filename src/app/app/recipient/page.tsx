@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth, db } from '@/firebase/config'
+import { storage } from '@/firebase/config'
 import { onAuthStateChanged } from 'firebase/auth'
 import { collection, query, where, getDocs, doc, getDoc, onSnapshot, setDoc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore'
+import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage'
 import { ensureUserRecord } from '@/lib/userSync'
 import { usePwaPrompt } from '@/lib/usePwaPrompt'
 import { createNotification } from '@/lib/createNotification'
@@ -70,9 +72,17 @@ export default function RecipientDashboard() {
   const [streamUrlInput, setStreamUrlInput] = useState('')
   const [streamThumbnailInput, setStreamThumbnailInput] = useState('')
   const [creatingStream, setCreatingStream] = useState(false)
+  const [activeStreamId, setActiveStreamId] = useState<string | null>(null)
+  const [checkingActiveStream, setCheckingActiveStream] = useState(true)
+  const [activeStreamExpires, setActiveStreamExpires] = useState<Date | null>(null)
 
   // Open modal to collect stream info from the creator (recipient)
   const handleCreateGiftStream = () => {
+    // If an active stream already exists for this creator, open it instead
+    if (activeStreamId) {
+      router.push(`/gift-stream/${activeStreamId}`)
+      return
+    }
     if (!user) {
       router.push('/auth')
       return
@@ -106,11 +116,27 @@ export default function RecipientDashboard() {
         try {
           const res = await fetch('/api/stream/metadata', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: streamUrlInput.trim() })
+            body: JSON.stringify({ url: streamUrlInput.trim(), capture: true })
           })
           const json = await res.json()
           if (res.ok) {
-            if (json.thumbnail) finalThumbnail = json.thumbnail
+            if (json.thumbnail) {
+              // If we received a data URL (server screenshot), upload to Firebase Storage
+              if (typeof json.thumbnail === 'string' && json.thumbnail.startsWith('data:')) {
+                try {
+                  const key = `stream-thumbs/${user.id || auth.currentUser?.uid}-${Date.now()}.jpg`
+                  const sRef = storageRef(storage, key)
+                  await uploadString(sRef, json.thumbnail, 'data_url')
+                  const publicUrl = await getDownloadURL(sRef)
+                  finalThumbnail = publicUrl
+                } catch (e) {
+                  console.warn('upload failed', e)
+                  finalThumbnail = json.thumbnail
+                }
+              } else {
+                finalThumbnail = json.thumbnail
+              }
+            }
             if (json.platform) platform = json.platform
           }
         } catch (e) {
@@ -149,6 +175,40 @@ export default function RecipientDashboard() {
       setGiftLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!user) {
+      setActiveStreamId(null)
+      setCheckingActiveStream(false)
+      return
+    }
+    setCheckingActiveStream(true)
+    const q = query(
+      collection(db, 'giftStreams'),
+      where('creatorUid', '==', user.id || auth.currentUser?.uid),
+      where('expiresAt', '>', new Date())
+    )
+    const unsub = onSnapshot(q, (snap) => {
+      if (snap.empty) {
+        setActiveStreamId(null)
+        setActiveStreamExpires(null)
+      } else {
+        setActiveStreamId(snap.docs[0].id)
+        const data: any = snap.docs[0].data()
+        const expiresAt = data?.expiresAt
+        let ex: Date | null = null
+        if (expiresAt) {
+          ex = typeof expiresAt.toDate === 'function' ? expiresAt.toDate() : new Date(expiresAt)
+        }
+        setActiveStreamExpires(ex)
+      }
+      setCheckingActiveStream(false)
+    }, (err) => {
+      console.warn('active stream listener error', err)
+      setCheckingActiveStream(false)
+    })
+    return () => unsub()
+  }, [user?.id])
   const [preloadForm, setPreloadForm] = useState({
     amount: '',
   })
@@ -927,15 +987,17 @@ Date: ${formatDate(voucher.createdAt)}
                 <Gift className="mr-2" size={20} />
                 View Gifts
               </Button>
-              <Button
-                onClick={handleCreateGiftStream}
-                variant="outline"
-                className="h-14 text-base rounded-2xl dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700"
-                disabled={giftLoading}
-              >
-                <WalletIcon className="mr-2" size={20} />
-                {giftLoading ? 'Creating...' : 'Gift Stream'}
-              </Button>
+              <span className="stream-tooltip" data-tooltip={activeStreamExpires ? `Expires: ${activeStreamExpires.toLocaleString()}` : ''}>
+                <Button
+                  onClick={handleCreateGiftStream}
+                  variant="outline"
+                  className={`h-14 text-base rounded-2xl dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700 ${activeStreamId ? 'ring-2 ring-green-400 ring-offset-2 stream-ring' : ''}`}
+                  disabled={giftLoading}
+                >
+                  <WalletIcon className="mr-2" size={20} />
+                  {activeStreamId ? 'Open Stream' : (giftLoading ? 'Creating...' : 'Gift Stream')}
+                </Button>
+              </span>
             </div>
 
             <div className="mt-8">
@@ -1873,12 +1935,27 @@ Date: ${formatDate(voucher.createdAt)}
                   try {
                     const res = await fetch('/api/stream/metadata', {
                       method: 'POST', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ url: streamUrlInput.trim() })
+                      body: JSON.stringify({ url: streamUrlInput.trim(), capture: true })
                     })
                     const json = await res.json()
                     if (res.ok) {
-                      if (json.thumbnail) setStreamThumbnailInput(json.thumbnail)
-                      if (json.platform) setStreamTitle((t) => t) // no-op but keeps flow
+                      if (json.thumbnail) {
+                        if (typeof json.thumbnail === 'string' && json.thumbnail.startsWith('data:')) {
+                          try {
+                            const key = `stream-thumbs/${user?.id || auth.currentUser?.uid}-${Date.now()}.jpg`
+                            const sRef = storageRef(storage, key)
+                            await uploadString(sRef, json.thumbnail, 'data_url')
+                            const publicUrl = await getDownloadURL(sRef)
+                            setStreamThumbnailInput(publicUrl)
+                          } catch (e) {
+                            console.warn('upload failed', e)
+                            setStreamThumbnailInput(json.thumbnail)
+                          }
+                        } else {
+                          setStreamThumbnailInput(json.thumbnail)
+                        }
+                      }
+                      if (json.platform) setStreamTitle((t) => t)
                       toast.success('Thumbnail generated — review or override before creating')
                     } else {
                       toast.error(json.error || 'Failed to generate thumbnail')

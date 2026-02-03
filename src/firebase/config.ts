@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
+import { getStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,11 +15,13 @@ const firebaseConfig = {
 let app: any
 let auth: any
 let db: any
+let storage: any
 
 try {
   app = initializeApp(firebaseConfig)
   auth = getAuth(app)
   db = getFirestore(app)
+  storage = getStorage(app)
   
   // Enable persistent login - session survives page refresh
   setPersistence(auth, browserLocalPersistence).catch((error) => {
@@ -29,3 +32,4 @@ try {
 }
 
 export { app, auth, db }
+export { storage }

@@ -61,3 +61,37 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+
+@keyframes gentleRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34,197,94,0);
+  }
+  50% {
+    box-shadow: 0 6px 18px 6px rgba(34,197,94,0.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34,197,94,0);
+  }
+}
+
+.stream-ring {
+  animation: gentleRing 2s ease-in-out infinite;
+}
+
+/* Simple tooltip used for stream expiry */
+.stream-tooltip { position: relative; display: inline-block }
+.stream-tooltip[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(17,24,39,0.95);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 60;
+}
+

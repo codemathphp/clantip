@@ -31,9 +31,35 @@ async function fetchOgImage(url: string) {
 
 export async function POST(req: Request) {
   try {
-    const { url } = await req.json()
+    const { url, capture } = await req.json()
     if (!url) return NextResponse.json({ error: 'Missing url' }, { status: 400 })
 
+    // If caller requested a live capture, attempt to screenshot the page (server-side).
+    if (capture) {
+      try {
+        let pw: any = null
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+          pw = require('playwright')
+        } catch {
+          // playwright not installed, skip screenshot capture
+        }
+        if (pw && pw.chromium) {
+          const browser = await pw.chromium.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'], headless: true })
+          const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+          await page.goto(url, { waitUntil: 'networkidle', timeout: 15000 }).catch(() => null)
+          const buf = await page.screenshot({ type: 'jpeg', quality: 75 })
+          await browser.close()
+          if (buf) {
+            const b64 = Buffer.from(buf).toString('base64')
+            return NextResponse.json({ thumbnail: `data:image/jpeg;base64,${b64}`, platform: null })
+          }
+        }
+      } catch (e) {
+        // continue to fallbacks
+        console.warn('screenshot capture failed', e)
+      }
+    }
     // Try noembed first (covers YouTube, Vimeo, Twitch, etc.)
     const noembed = await fetchNoembed(url)
     if (noembed && (noembed.thumbnail || noembed.platform)) {
