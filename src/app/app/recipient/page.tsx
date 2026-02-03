@@ -15,6 +15,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { NotificationCenter } from '@/components/NotificationCenter'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
@@ -57,42 +65,59 @@ export default function RecipientDashboard() {
   const [giftPaymentMethod, setGiftPaymentMethod] = useState<'sender-balance' | 'available-credits' | 'checkout' | null>(null)
   const [giftLoading, setGiftLoading] = useState(false)
 
-  const handleCreateGiftStream = async () => {
+  const [isStreamModalOpen, setIsStreamModalOpen] = useState(false)
+  const [streamTitle, setStreamTitle] = useState('')
+  const [streamUrlInput, setStreamUrlInput] = useState('')
+  const [streamThumbnailInput, setStreamThumbnailInput] = useState('')
+  const [creatingStream, setCreatingStream] = useState(false)
+
+  // Open modal to collect stream info from the creator (recipient)
+  const handleCreateGiftStream = () => {
     if (!user) {
       router.push('/auth')
       return
     }
-    try {
-      setGiftLoading(true)
-      // Prompt the creator for stream details before creating the public page
-      const defaultTitle = `${user.fullName || user.handle || 'Live'} Stream`
-      const title = window.prompt('Enter a title for your stream', defaultTitle)
-      if (!title) {
-        setGiftLoading(false)
-        return
-      }
-      const streamUrl = window.prompt('Enter your live stream URL (e.g. YouTube, Twitch)', '')
-      if (streamUrl === null) {
-        setGiftLoading(false)
-        return
-      }
-      const thumbnailUrl = window.prompt('Optional: paste a thumbnail image URL', '') || null
+    setStreamTitle(`${user.fullName || user.handle || 'Live'} Stream`)
+    setStreamUrlInput('')
+    setStreamThumbnailInput('')
+    setIsStreamModalOpen(true)
+  }
 
+  const createStreamFromForm = async () => {
+    if (!user) {
+      router.push('/auth')
+      return
+    }
+    if (!streamTitle.trim()) {
+      toast.error('Please provide a stream title')
+      return
+    }
+    setCreatingStream(true)
+    try {
       const docRef = await addDoc(collection(db, 'giftStreams'), {
-        title,
-        streamUrl: streamUrl || '',
-        thumbnailUrl: thumbnailUrl || null,
+        title: streamTitle.trim(),
+        streamUrl: streamUrlInput.trim() || '',
+        thumbnailUrl: streamThumbnailInput.trim() || null,
         creatorUid: user.id || auth.currentUser?.uid,
         creatorName: user.fullName || '',
         creatorHandle: user.handle || '',
         createdAt: serverTimestamp(),
       })
-      toast.success('Gift stream created. Opening public page...')
+
+      const publicUrl = `${window.location.origin}/gift-stream/${docRef.id}`
+      try { await navigator.clipboard.writeText(publicUrl) } catch (e) { /* ignore */ }
+      if ((navigator as any).share) {
+        try { await (navigator as any).share({ title: streamTitle, url: publicUrl }) } catch (e) { /* ignore */ }
+      }
+
+      toast.success('Stream created and link copied to clipboard')
+      setIsStreamModalOpen(false)
       router.push(`/gift-stream/${docRef.id}`)
     } catch (e: any) {
       console.error('Failed to create gift stream', e)
       toast.error(e?.message || 'Failed to create gift stream')
     } finally {
+      setCreatingStream(false)
       setGiftLoading(false)
     }
   }
@@ -1791,6 +1816,36 @@ Date: ${formatDate(voucher.createdAt)}
           </div>
         )}
       </main>
+
+      {/* Stream creation modal */}
+      <Dialog open={isStreamModalOpen} onOpenChange={setIsStreamModalOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Share Gift Stream</DialogTitle>
+            <DialogDescription>Enter a title, stream URL and optional thumbnail to create your public gifting page.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="streamTitle">Title</Label>
+              <Input id="streamTitle" value={streamTitle} onChange={(e) => setStreamTitle(e.target.value)} placeholder="My Live Stream" />
+            </div>
+            <div>
+              <Label htmlFor="streamUrl">Stream URL</Label>
+              <Input id="streamUrl" value={streamUrlInput} onChange={(e) => setStreamUrlInput(e.target.value)} placeholder="https://youtube.com/..." />
+            </div>
+            <div>
+              <Label htmlFor="thumbnailUrl">Thumbnail URL (optional)</Label>
+              <Input id="thumbnailUrl" value={streamThumbnailInput} onChange={(e) => setStreamThumbnailInput(e.target.value)} placeholder="https://.../thumb.jpg" />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStreamModalOpen(false)} disabled={creatingStream}>Cancel</Button>
+            <Button onClick={createStreamFromForm} disabled={creatingStream}>{creatingStream ? 'Creating...' : 'Create & Share'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-700/50 z-20">
         <div className="flex items-center justify-around max-w-2xl mx-auto px-4">
