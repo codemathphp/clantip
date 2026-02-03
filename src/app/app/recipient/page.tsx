@@ -1497,15 +1497,19 @@ Date: ${formatDate(voucher.createdAt)}
                         <Input
                           id="preloadAmount"
                           type="number"
+                          inputMode="decimal"
                           placeholder="0.00"
                           value={preloadForm.amount}
                           onChange={(e) => {
                             setPreloadForm({ amount: e.target.value })
                           }}
-                          className="rounded-2xl border-slate-200/50 dark:border-slate-700/50 pl-8"
+                          onFocus={(e) => e.target.select()}
+                          className="rounded-2xl border-slate-200/50 dark:border-slate-700/50 pl-8 focus:border-primary focus:ring-2 focus:ring-primary/30"
                           step="0.01"
                           min="1"
                           max="10000"
+                          autoComplete="off"
+                          autoCorrect="off"
                         />
                       </div>
                       <p className="text-xs text-muted-foreground">Minimum: $1 | Maximum: $10,000</p>
