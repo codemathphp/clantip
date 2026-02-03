@@ -51,7 +51,7 @@ export default function PublicGiftStreamPage() {
   }, [id])
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const unsub = onAuthStateChanged(auth, async (u: any) => {
       setUser(u)
       if (u) {
         try {
