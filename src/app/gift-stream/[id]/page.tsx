@@ -120,8 +120,8 @@ export default function PublicGiftStreamPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-3xl mx-auto p-6">
-        <div className="flex gap-6 items-center mb-6">
-          <div className="w-40 h-24 bg-slate-200 rounded overflow-hidden">
+        <div className="flex flex-col md:flex-row gap-6 items-start mb-6">
+          <div className="w-full md:w-1/3 h-48 md:h-40 bg-slate-200 rounded overflow-hidden">
             {stream.thumbnailUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={stream.thumbnailUrl} alt={stream.title} className="w-full h-full object-cover" />
@@ -129,14 +129,14 @@ export default function PublicGiftStreamPage() {
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">No thumbnail</div>
             )}
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold">{stream.title}</h1>
             <p className="text-sm text-muted-foreground">By {stream.creatorName || stream.creatorHandle}</p>
             <div className="mt-2">
               <a href={stream.streamUrl} target="_blank" rel="noreferrer" className="text-primary underline">Watch Stream</a>
             </div>
           </div>
-          <div className="ml-auto text-right">
+          <div className="w-full md:w-auto ml-0 md:ml-auto text-right">
             <p className="text-sm text-muted-foreground">Your balance</p>
             <div className="text-2xl font-bold text-primary">{(isNaN(loveUnits) ? 0 : loveUnits).toFixed(2)}</div>
           </div>
@@ -146,31 +146,31 @@ export default function PublicGiftStreamPage() {
           <p className="text-sm text-muted-foreground">Tap an icon to gift the creator from your preloaded balance</p>
         </div>
 
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
-          {icons.map((icon) => {
-            const hasBalance = loveUnits >= icon.amount
-            return (
-              <button
-                key={icon.id}
-                onClick={() => hasBalance && setSelectedIcon(icon)}
-                className={`group relative rounded-lg p-1 transition-all ${
-                  hasBalance ? 'hover:shadow-2xl hover:scale-105 active:scale-95 cursor-pointer' : 'opacity-40 cursor-not-allowed'
-                }`}
-                disabled={!hasBalance}
-                aria-label={`Send $${icon.amount.toFixed(2)}${!hasBalance ? ' (insufficient balance)' : ''}`}
-              >
-                <div className={`w-full aspect-square flex items-center justify-center transition-all ${
-                  !hasBalance ? 'grayscale' : 'grayscale-0'
-                }`}>
-                  <LottieIcon src={icon.lottieUrl} themeColor={hasBalance ? '#1a9b8e' : '#9ca3af'} className="w-20 h-20" />
-                </div>
-                <div className="flex items-center justify-center gap-1 mt-1">
-                  <Heart size={12} className={hasBalance ? 'text-red-500' : 'text-slate-400'} />
-                  <p className={`text-sm font-bold ${hasBalance ? 'text-primary' : 'text-slate-400'}`}>{icon.amount.toFixed(2)}</p>
-                </div>
-              </button>
-            )
-          })}
+        <div className="overflow-x-auto py-2">
+          <div className="flex gap-4 w-max">
+            {icons.map((icon) => {
+              const hasBalance = loveUnits >= icon.amount
+              return (
+                <button
+                  key={icon.id}
+                  onClick={() => hasBalance && setSelectedIcon(icon)}
+                  className={`group relative rounded-lg p-2 transition-all bg-white border border-slate-100 ${
+                    hasBalance ? 'hover:shadow-lg hover:scale-105 cursor-pointer' : 'opacity-40 cursor-not-allowed'
+                  }`}
+                  style={{ minWidth: 120 }}
+                  disabled={!hasBalance}
+                  aria-label={icon.name}
+                >
+                  <div className={`w-28 h-28 flex items-center justify-center mx-auto ${!hasBalance ? 'grayscale' : ''}`}>
+                    <LottieIcon src={icon.lottieUrl} themeColor={hasBalance ? '#1a9b8e' : '#9ca3af'} className="w-full h-full" />
+                  </div>
+                  <div className="text-center mt-2">
+                    <p className="text-sm font-medium">{icon.name}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {selectedIcon && (

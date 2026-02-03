@@ -64,11 +64,24 @@ export default function RecipientDashboard() {
     }
     try {
       setGiftLoading(true)
-      const title = `${user.fullName || user.handle || 'Live'} Stream`
+      // Prompt the creator for stream details before creating the public page
+      const defaultTitle = `${user.fullName || user.handle || 'Live'} Stream`
+      const title = window.prompt('Enter a title for your stream', defaultTitle)
+      if (!title) {
+        setGiftLoading(false)
+        return
+      }
+      const streamUrl = window.prompt('Enter your live stream URL (e.g. YouTube, Twitch)', '')
+      if (streamUrl === null) {
+        setGiftLoading(false)
+        return
+      }
+      const thumbnailUrl = window.prompt('Optional: paste a thumbnail image URL', '') || null
+
       const docRef = await addDoc(collection(db, 'giftStreams'), {
         title,
-        streamUrl: '',
-        thumbnailUrl: null,
+        streamUrl: streamUrl || '',
+        thumbnailUrl: thumbnailUrl || null,
         creatorUid: user.id || auth.currentUser?.uid,
         creatorName: user.fullName || '',
         creatorHandle: user.handle || '',
