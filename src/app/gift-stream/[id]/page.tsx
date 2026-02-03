@@ -272,7 +272,20 @@ export default function PublicGiftStreamPage() {
             {/* Host badge on thumbnail */}
             <div className="absolute top-2 right-2 bg-black/60 text-white text-xs font-semibold px-2 py-1 rounded flex items-center gap-1">
               <Users className="w-3 h-3" />
-              Hosted by {stream.creatorName || stream.creatorHandle}
+              {(() => {
+                const p = (stream?.platform || '')?.toString().toLowerCase() || ''
+                const map: Record<string, string> = {
+                  youtube: '▶️',
+                  twitch: '🎮',
+                  vimeo: '📺',
+                  facebook: '📘',
+                }
+                const emoji = map[p] || ''
+                return (<>
+                  {emoji && <span className="mr-1">{emoji}</span>}
+                  Hosted by {stream.creatorName || stream.creatorHandle}
+                </>)
+              })()}
             </div>
           </div>
           <div className="flex-1">

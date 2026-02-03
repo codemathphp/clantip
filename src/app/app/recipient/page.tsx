@@ -96,18 +96,35 @@ export default function RecipientDashboard() {
       toast.error('Please add your live stream URL')
       return
     }
-    if (!streamThumbnailInput.trim()) {
-      toast.error('Please add a thumbnail URL')
-      return
-    }
+    // thumbnail is optional; we'll attempt to auto-generate if missing
     setCreatingStream(true)
     try {
+      // if thumbnail missing, attempt to generate via server API
+      let finalThumbnail = streamThumbnailInput.trim() || ''
+      let platform: string | null = null
+      if (!finalThumbnail) {
+        try {
+          const res = await fetch('/api/stream/metadata', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: streamUrlInput.trim() })
+          })
+          const json = await res.json()
+          if (res.ok) {
+            if (json.thumbnail) finalThumbnail = json.thumbnail
+            if (json.platform) platform = json.platform
+          }
+        } catch (e) {
+          console.warn('metadata fetch failed', e)
+        }
+      }
+
       const now = new Date()
       const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000)
       const docRef = await addDoc(collection(db, 'giftStreams'), {
         title: streamTitle.trim(),
         streamUrl: streamUrlInput.trim(),
-        thumbnailUrl: streamThumbnailInput.trim(),
+        thumbnailUrl: finalThumbnail || null,
+        platform: platform || null,
         creatorUid: user.id || auth.currentUser?.uid,
         creatorName: user.fullName || '',
         creatorHandle: user.handle || '',
@@ -1828,35 +1845,75 @@ Date: ${formatDate(voucher.createdAt)}
         )}
       </main>
 
-      {/* Stream creation modal */}
-      <Dialog open={isStreamModalOpen} onOpenChange={setIsStreamModalOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Share Gift Stream</DialogTitle>
-            <DialogDescription>Enter a title, stream URL and optional thumbnail to create your public gifting page.</DialogDescription>
-          </DialogHeader>
+      {/* Stream creation drawer (bottom sheet) */}
+      {isStreamModalOpen && (
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setIsStreamModalOpen(false)} />
+          <div className="fixed left-0 right-0 bottom-0 mx-auto max-w-xl bg-white dark:bg-slate-900 rounded-t-2xl p-4 shadow-lg max-h-[80vh] overflow-auto">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <h3 className="text-lg font-semibold">Share Gift Stream</h3>
+                <p className="text-xs text-muted-foreground">Enter a title and your stream link — we'll generate the thumbnail for you.</p>
+              </div>
+              <button className="p-2" onClick={() => setIsStreamModalOpen(false)}>Close</button>
+            </div>
 
-          <div className="space-y-4 mt-4">
-            <div>
-              <Label htmlFor="streamTitle">Title</Label>
-              <Input id="streamTitle" value={streamTitle} onChange={(e) => setStreamTitle(e.target.value)} placeholder="My Live Stream" />
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label htmlFor="streamTitle">Title</Label>
+                <Input id="streamTitle" value={streamTitle} onChange={(e) => setStreamTitle(e.target.value)} placeholder="My Live Stream" />
+              </div>
+              <div>
+                <Label htmlFor="streamUrl">Stream URL</Label>
+                <Input id="streamUrl" value={streamUrlInput} onChange={(e) => setStreamUrlInput(e.target.value)} placeholder="https://youtube.com/..." />
+              </div>
+              <div className="flex items-center gap-2">
+                <Button onClick={async () => {
+                  if (!streamUrlInput.trim()) { toast.error('Please add a stream URL first'); return }
+                  try {
+                    const res = await fetch('/api/stream/metadata', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ url: streamUrlInput.trim() })
+                    })
+                    const json = await res.json()
+                    if (res.ok) {
+                      if (json.thumbnail) setStreamThumbnailInput(json.thumbnail)
+                      if (json.platform) setStreamTitle((t) => t) // no-op but keeps flow
+                      toast.success('Thumbnail generated — review or override before creating')
+                    } else {
+                      toast.error(json.error || 'Failed to generate thumbnail')
+                    }
+                  } catch (e) {
+                    console.error(e)
+                    toast.error('Failed to generate thumbnail')
+                  }
+                }}>Generate Thumbnail</Button>
+                <span className="text-sm text-muted-foreground">We will auto-detect platform and thumbnail from the link.</span>
+              </div>
+
+              <div>
+                <Label htmlFor="thumbnailUrl">Thumbnail URL (auto-generated or override)</Label>
+                <Input id="thumbnailUrl" value={streamThumbnailInput} onChange={(e) => setStreamThumbnailInput(e.target.value)} placeholder="https://.../thumb.jpg" />
+              </div>
+
+              {streamThumbnailInput && (
+                <div className="pt-2">
+                  <p className="text-xs text-muted-foreground mb-1">Preview</p>
+                  <div className="w-full h-40 bg-slate-100 rounded overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={streamThumbnailInput} alt="thumbnail preview" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              )}
             </div>
-            <div>
-              <Label htmlFor="streamUrl">Stream URL</Label>
-              <Input id="streamUrl" value={streamUrlInput} onChange={(e) => setStreamUrlInput(e.target.value)} placeholder="https://youtube.com/..." />
-            </div>
-            <div>
-              <Label htmlFor="thumbnailUrl">Thumbnail URL (optional)</Label>
-              <Input id="thumbnailUrl" value={streamThumbnailInput} onChange={(e) => setStreamThumbnailInput(e.target.value)} placeholder="https://.../thumb.jpg" />
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsStreamModalOpen(false)} disabled={creatingStream}>Cancel</Button>
+              <Button onClick={createStreamFromForm} disabled={creatingStream}>{creatingStream ? 'Creating...' : 'Create & Share'}</Button>
             </div>
           </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsStreamModalOpen(false)} disabled={creatingStream}>Cancel</Button>
-            <Button onClick={createStreamFromForm} disabled={creatingStream}>{creatingStream ? 'Creating...' : 'Create & Share'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200/50 dark:border-slate-700/50 z-20">
         <div className="flex items-center justify-around max-w-2xl mx-auto px-4">
