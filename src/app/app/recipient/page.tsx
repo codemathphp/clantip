@@ -92,12 +92,20 @@ export default function RecipientDashboard() {
       toast.error('Please provide a stream title')
       return
     }
+    if (!streamUrlInput.trim()) {
+      toast.error('Please add your live stream URL')
+      return
+    }
+    if (!streamThumbnailInput.trim()) {
+      toast.error('Please add a thumbnail URL')
+      return
+    }
     setCreatingStream(true)
     try {
       const docRef = await addDoc(collection(db, 'giftStreams'), {
         title: streamTitle.trim(),
-        streamUrl: streamUrlInput.trim() || '',
-        thumbnailUrl: streamThumbnailInput.trim() || null,
+        streamUrl: streamUrlInput.trim(),
+        thumbnailUrl: streamThumbnailInput.trim(),
         creatorUid: user.id || auth.currentUser?.uid,
         creatorName: user.fullName || '',
         creatorHandle: user.handle || '',
